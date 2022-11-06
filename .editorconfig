@@ -1,7 +1,0 @@
-﻿[*.cs]
-
-# RCS0022: Add new line after opening brace of empty block.
-dotnet_diagnostic.RCS0022.severity = none
-
-# RCS1100: ([deprecated] use RCS1253 instead) Format documentation summary on a single line.
-dotnet_diagnostic.RCS1100.severity = silent
