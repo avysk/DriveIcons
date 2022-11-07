@@ -19,7 +19,8 @@ public class DriveIcons
         get
         {
             const string keyString =
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\DriveIcons";
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
+                + "DriveIcons";
             using IRegistryKey? driveKey = _localMachine.OpenSubKey(keyString);
             if (driveKey == null)
             {
@@ -37,7 +38,8 @@ public class DriveIcons
         get
         {
             const string keyString =
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\DriveIcons";
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
+                + "DriveIcons";
             using IRegistryKey? driveKey = _localMachine.OpenSubKey(
                 keyString,
                 true
