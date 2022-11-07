@@ -6,11 +6,11 @@ public interface IRegistryKey : IDisposable
 
     public IRegistryKey? OpenSubKey(string key);
 
-    public IRegistryKey? OpenSubKeyAsWritable(string name);
+    public IRegistryKey? OpenSubKeyAsWritable(string key);
 
     public void DeleteSubKeyTree(string subkey);
 
-    public string[] SubKeyNames { get; }
+    public IEnumerable<string> SubKeyNames { get; }
 
     public object? GetValue(string? name, object? defaultValue);
 
@@ -18,5 +18,5 @@ public interface IRegistryKey : IDisposable
 
     public void SetValue(string? name, object value);
 
-    public string[] ValueNames { get; }
+    public IEnumerable<string> ValueNames { get; }
 }

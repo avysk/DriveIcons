@@ -17,7 +17,7 @@ public class WindowsRegistryKey : IRegistryKey
     public void DeleteSubKeyTree(string subkey) =>
         _registryKey.DeleteSubKeyTree(subkey, throwOnMissingSubKey: false);
 
-    public string[] SubKeyNames => _registryKey.GetSubKeyNames();
+    public IEnumerable<string> SubKeyNames => _registryKey.GetSubKeyNames();
 
     public object? GetValue(string? name, object? defaultValue) =>
         _registryKey.GetValue(name, defaultValue);
@@ -25,13 +25,13 @@ public class WindowsRegistryKey : IRegistryKey
     public RegistryValueKind GetValueKind(string? name) =>
         _registryKey.GetValueKind(name);
 
-    public string[] ValueNames => _registryKey.GetValueNames();
+    public IEnumerable<string> ValueNames => _registryKey.GetValueNames();
 
     public IRegistryKey? OpenSubKey(string key) =>
         new WindowsRegistryKey(_registryKey.OpenSubKey(key)!);
 
-    public IRegistryKey? OpenSubKeyAsWritable(string name) =>
-        new WindowsRegistryKey(_registryKey.OpenSubKey(name, writable: true)!);
+    public IRegistryKey? OpenSubKeyAsWritable(string key) =>
+        new WindowsRegistryKey(_registryKey.OpenSubKey(key, writable: true)!);
 
     public void SetValue(string? name, object value) =>
         _registryKey.SetValue(name, value);

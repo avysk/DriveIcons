@@ -168,7 +168,7 @@ public class DriveIcons
             throw new RegistryException(error);
         }
 
-        if ((finalKey.SubKeyNames.Length) > 0)
+        if (finalKey.SubKeyNames.Any())
         {
             error =
                 $"Default icon subkey for disk {letter} "
@@ -176,8 +176,8 @@ public class DriveIcons
             throw new RegistryException(error);
         }
 
-        string[] names = finalKey.ValueNames;
-        int length = names.Length;
+        IEnumerable<string> names = finalKey.ValueNames;
+        int length = names.Count();
         if ((length != 1) || (!names.Contains(string.Empty)))
         {
             error =
