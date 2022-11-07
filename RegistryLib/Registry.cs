@@ -21,7 +21,7 @@ public class DriveIcons
             const string keyString =
                 @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
                 + "DriveIcons";
-            using IRegistryKey? driveKey = _localMachine.OpenSubKey(keyString);
+            IRegistryKey? driveKey = _localMachine.OpenSubKey(keyString);
             if (driveKey == null)
             {
                 throw new RegistryException(
@@ -40,9 +40,8 @@ public class DriveIcons
             const string keyString =
                 @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
                 + "DriveIcons";
-            using IRegistryKey? driveKey = _localMachine.OpenSubKey(
-                keyString,
-                true
+            IRegistryKey? driveKey = _localMachine.OpenSubKeyAsWritable(
+                keyString
             );
             if (driveKey == null)
             {
@@ -70,7 +69,7 @@ public class DriveIcons
 
         using IRegistryKey driveIconsKey = _driveIconsKey;
 
-        if (!driveIconsKey.GetSubKeyNames().Contains(letter))
+        if (!driveIconsKey.SubKeyNames.Contains(letter))
         {
             return null;
         }
@@ -84,7 +83,7 @@ public class DriveIcons
 
         const string defaultIcon = "DefaultIcon";
 
-        if (!driveIconKey.GetSubKeyNames().Contains(defaultIcon))
+        if (!driveIconKey.SubKeyNames.Contains(defaultIcon))
         {
             error =
                 $"Key for disk {letter} does exist but does not have "
@@ -101,19 +100,19 @@ public class DriveIcons
             throw new RegistryException(error);
         }
 
-        const string dfault = "(Default)";
-
-        object? value = finalKey.GetValue(dfault, null);
+        object? value = finalKey.GetValue(string.Empty, null);
         if (value == null)
         {
             return null;
         }
 
-        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(dfault);
+        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(
+            string.Empty
+        );
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
             error =
-                $"There is a value {dfault} for disk {disk} "
+                $"There is a default icon value for disk {disk} "
                 + "but it is not a string.";
             throw new RegistryException(error);
         }
@@ -128,8 +127,7 @@ public class DriveIcons
         using IRegistryKey driveIconKey = driveIconsKey.CreateSubKey(letter);
         const string defaultIcon = "DefaultIcon";
         using IRegistryKey finalKey = driveIconKey.CreateSubKey(defaultIcon);
-        const string dfault = "(Default)";
-        finalKey.SetValue(dfault, newPath);
+        finalKey.SetValue(string.Empty, newPath);
     }
 
     private void _deleteIconPath(char disk)
@@ -138,45 +136,68 @@ public class DriveIcons
         string error;
 
         using IRegistryKey driveIconsKey = _driveIconsKeyWritable;
-
-        if (!driveIconsKey.GetSubKeyNames().Contains(letter))
+        if (!driveIconsKey.SubKeyNames.Contains(letter))
         {
+            // If key for drive does not exist, we do nothing.
+            // Otherwise, we will check that it is well-formed and delete it.
             return;
         }
 
         using IRegistryKey driveIconKey = driveIconsKey.OpenSubKey(letter)!;
+        if (driveIconKey == null)
+        {
+            error = $"Key for disk {letter} both does and does not exist.";
+            throw new RegistryException(error);
+        }
 
         const string defaultIcon = "DefaultIcon";
-
-        if (driveIconKey.GetSubKeyNames().Length > 1)
+        if (!driveIconKey.SubKeyNames.Contains(defaultIcon))
         {
-            error = $"Key for disk {letter} looks very strange.";
+            error =
+                $"Key for disk {letter} does exist but does not have "
+                + $"{defaultIcon} subkey.";
             throw new RegistryException(error);
         }
 
-        using IRegistryKey finalKey = driveIconKey.OpenSubKey(defaultIcon)!;
-        if (finalKey.GetSubKeyNames().Length > 0)
+        using IRegistryKey? finalKey = driveIconKey.OpenSubKey(defaultIcon);
+        if (finalKey == null)
         {
-            error = $"Default icon key for disk {letter} looks very strange.";
+            error =
+                $"Default icon subkey for disk {letter} both does "
+                + "and does not exist.";
             throw new RegistryException(error);
         }
 
-        const string dfault = "(Default)";
-
-        object? value = finalKey.GetValue(dfault, null);
-        if (value == null)
+        if ((finalKey.SubKeyNames.Length) > 0)
         {
-            return null;
+            error =
+                $"Default icon subkey for disk {letter} "
+                + "looks very strange.";
+            throw new RegistryException(error);
         }
 
-        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(dfault);
+        string[] names = finalKey.ValueNames;
+        int length = names.Length;
+        if ((length != 1) || (!names.Contains(string.Empty)))
+        {
+            error =
+                $"Default icon subkey for disk {letter} "
+                + "looks very strange.";
+            throw new RegistryException(error);
+        }
+
+        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(
+            string.Empty
+        );
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
             error =
-                $"There is a value {dfault} for disk {disk} "
-                + "but it is not a string.";
+                $"Default icon subkey for disk {letter} "
+                + "looks very strange.";
             throw new RegistryException(error);
         }
+
+        driveIconsKey.DeleteSubKeyTree(letter);
     }
 
     public DriveIcons(IRegistryKey registry)
@@ -194,8 +215,6 @@ public class DriveIcons
         set
         {
             _verifyDiskIsValid(disk);
-            dynamic? _ = _iconPath(disk);
-
             if (value != null)
             {
                 _writeIconPath(disk, value);

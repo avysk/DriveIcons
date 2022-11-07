@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RegistryLib\RegistryLib.csproj" />
+    <ProjectReference Include="..\RegistryLib\Registry.Lib.csproj" />
   </ItemGroup>
 
 </Project>
