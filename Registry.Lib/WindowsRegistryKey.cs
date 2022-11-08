@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 
-namespace RegistryLib;
+namespace Fi.Pentode.Registry.Lib;
 
 public class WindowsRegistryKey : IRegistryKey
 {

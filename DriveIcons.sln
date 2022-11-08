@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Lib", "Registry.Lib\Registry.Lib.csproj", "{64359B72-09A6-4EFE-96E3-C1757996F333}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Lib.Test", "Registry.Lib.Test\Registry.Lib.Test.csproj", "{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Lib.Tests", "Registry.Lib.Tests\Registry.Lib.Tests.csproj", "{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E79D3631-67C9-4415-9566-62230699A413} = {E79D3631-67C9-4415-9566-62230699A413}
 	EndProjectSection
@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry", "Mocked.R
 		{64359B72-09A6-4EFE-96E3-C1757996F333} = {64359B72-09A6-4EFE-96E3-C1757996F333}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry.Test", "Mocked.Registry.Test\Mocked.Registry.Test.csproj", "{86F14D9A-3856-48DF-A524-447FB5D8593D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry.Tests", "Mocked.Registry.Tests\Mocked.Registry.Tests.csproj", "{86F14D9A-3856-48DF-A524-447FB5D8593D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E79D3631-67C9-4415-9566-62230699A413} = {E79D3631-67C9-4415-9566-62230699A413}
 	EndProjectSection

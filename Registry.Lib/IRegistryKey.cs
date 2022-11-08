@@ -1,4 +1,4 @@
-namespace RegistryLib;
+namespace Fi.Pentode.Registry.Lib;
 
 public interface IRegistryKey : IDisposable
 {

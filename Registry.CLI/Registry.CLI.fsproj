@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RegistryLib\Registry.Lib.csproj" />
+    <ProjectReference Include="..\Registry.Lib\Registry.Lib.csproj" />
   </ItemGroup>
 
 </Project>

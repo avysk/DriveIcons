@@ -1,10 +1,10 @@
-﻿using RegistryLib;
+﻿using Fi.Pentode.Registry.Lib;
 
 using System.Diagnostics;
 
-namespace MockedRegistry;
+namespace Fi.Pentode.MockedRegistry;
 
-internal class MockedRegistryKey : IRegistryKey
+public class MockedRegistryKey : IRegistryKey
 {
     private bool _disposedValue;
 
@@ -18,13 +18,17 @@ internal class MockedRegistryKey : IRegistryKey
     /// full names of "registry values". The value of
     /// MockedRegistryKey.
     /// </summary>
+#pragma warning disable CA2211 // Non-constant fields should not be visible
     public static Dictionary<string, string[]> Keys = new();
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
     /// <summary>
     /// This field contains in-memory "registry" for testing. Dictionary keys
     /// are "names of registry values", dictionary values are their values.
     /// </summary>
+#pragma warning disable CA2211 // Non-constant fields should not be visible
     public static Dictionary<string, object> Values = new();
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
     public MockedRegistryKey(
         string path,
@@ -39,11 +43,17 @@ internal class MockedRegistryKey : IRegistryKey
         _writable = writable;
     }
 
+    /// <summary>
+    /// Return the names of the valuos in the key.
+    /// </summary>
     public IEnumerable<string> ValueNames
     {
         get { return Keys[_path].Where(value => Values.ContainsKey(value)); }
     }
 
+    /// <summary>
+    /// Return the names of the subkeys in the key.
+    /// </summary>
     public IEnumerable<string> SubKeyNames
     {
         get { return Keys[_path].Where(key => Keys.ContainsKey(key)); }
@@ -51,7 +61,13 @@ internal class MockedRegistryKey : IRegistryKey
 
     public IRegistryKey CreateSubKey(string key)
     {
-        Debug.Assert(_writable);
+        if (!_writable)
+        {
+            throw new RegistryException(
+                "Cannot create subkeys in readonly key."
+            );
+        }
+
         string newPath = $"{_path}\\{key}";
         // create new empty key
         Keys.Add(newPath, Array.Empty<string>());
