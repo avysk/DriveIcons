@@ -1,9 +1,12 @@
 ﻿using Fi.Pentode.Registry.Lib;
 
-using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace Fi.Pentode.MockedRegistry;
 
+/// <summary>
+/// In-memory "registry" for testing.
+/// </summary>
 public class MockedRegistryKey : IRegistryKey
 {
     private bool _disposedValue;
@@ -12,24 +15,39 @@ public class MockedRegistryKey : IRegistryKey
 
     private readonly bool _writable;
 
-    /// <summary>
-    /// This field contains in-memory "registry" for testing. Dictionary keys
-    /// are "registry keys" without trailing \, values are either other keys or
-    /// full names of "registry values". The value of
-    /// MockedRegistryKey.
-    /// </summary>
-#pragma warning disable CA2211 // Non-constant fields should not be visible
-    public static Dictionary<string, string[]> Keys = new();
-#pragma warning restore CA2211 // Non-constant fields should not be visible
+    private static Dictionary<string, string[]> _keys = new();
 
     /// <summary>
-    /// This field contains in-memory "registry" for testing. Dictionary keys
-    /// are "names of registry values", dictionary values are their values.
+    /// Get the dictionary of defined "registry keys".
     /// </summary>
-#pragma warning disable CA2211 // Non-constant fields should not be visible
-    public static Dictionary<string, object> Values = new();
-#pragma warning restore CA2211 // Non-constant fields should not be visible
+    /// <returns>
+    /// Dictionary keys are "full names of registry keys" without trailing \,
+    /// values are arrays of full names of subkeys and full names of "registry
+    /// values".
+    /// </returns>
+    public static Dictionary<string, string[]> GetKeys() => _keys;
 
+    private static Dictionary<string, object> _values = new();
+
+    /// <summary>
+    /// Get dictionary of defined "registry values".
+    /// </summary>
+    /// <returns>
+    /// Dictionary keys are "full names of registry values", dictionary values
+    /// are their values.
+    /// </returns>
+    public static Dictionary<string, object> GetValues() => _values;
+
+    /// <summary>
+    /// In-memory "registry" for testing.
+    /// </summary>
+    /// <param name="path">Path of selected key.</param>
+    /// <param name="keys">The dictionary, mapping cefistry key names to arrays
+    /// of subkey and value names.</param>
+    /// <param name="values">The dictionary, mapping rvalue names to their
+    /// values.</param>
+    /// <param name="writable">Specifies, if the selected key is supposed
+    /// to be writable.</param>
     public MockedRegistryKey(
         string path,
         Dictionary<string, string[]> keys,
@@ -38,58 +56,99 @@ public class MockedRegistryKey : IRegistryKey
     )
     {
         _path = path;
-        Keys = keys;
-        Values = values;
+        _keys = keys;
+        _values = values;
         _writable = writable;
     }
 
     /// <summary>
-    /// Return the names of the valuos in the key.
+    /// Allows to get values of this key.
     /// </summary>
+    /// <value>
+    /// The names of the values in the key.
+    /// </value>
     public IEnumerable<string> ValueNames
     {
-        get { return Keys[_path].Where(value => Values.ContainsKey(value)); }
+        get { return _keys[_path].Where(value => _values.ContainsKey(value)); }
     }
 
     /// <summary>
-    /// Return the names of the subkeys in the key.
+    /// Allows to get subkeys of this key.
     /// </summary>
+    /// <value>
+    /// The names of the subkeys in the key.
+    /// </value>
     public IEnumerable<string> SubKeyNames
     {
-        get { return Keys[_path].Where(key => Keys.ContainsKey(key)); }
+        get { return _keys[_path].Where(key => _keys.ContainsKey(key)); }
     }
 
-    public IRegistryKey CreateSubKey(string key)
+    /// <summary>
+    /// Get the subkey of this key.
+    /// </summary>
+    /// <remarks>
+    /// If the subkey does not exist, the empty subkey is created first.
+    /// The returned subkey is writable.
+    /// </remarks>
+    /// <param name="subkey">
+    /// The short name of the requested subkey.
+    /// </param>
+    /// <returns>
+    /// <see cref="MockedRegistryKey"/> corresponding to the writable
+    /// subkey of the key.
+    /// </returns>
+    /// <exception cref="RegistryException">
+    /// Thrown if the key is not writable.
+    /// </exception>
+    public IRegistryKey CreateSubKey(string subkey)
     {
         if (!_writable)
         {
             throw new RegistryException(
-                "Cannot create subkeys in readonly key."
+                "Cannot create subkeys in a readonly key."
             );
         }
 
-        string newPath = $"{_path}\\{key}";
-        // create new empty key
-        Keys.Add(newPath, Array.Empty<string>());
+        string newPath = $"{_path}\\{subkey}";
+
+        if (!_keys.ContainsKey(newPath))
+        {
+            // create new empty key
+            _keys.Add(newPath, Array.Empty<string>());
+        }
+
         return new MockedRegistryKey(
             path: newPath,
-            keys: Keys,
-            values: Values,
+            keys: _keys,
+            values: _values,
             writable: true
         );
     }
 
     /// <summary>
-    /// Deletes key tree for the given subkey. Notice that associated values
-    /// are not deleted.
+    /// Deletes key tree for the given subkey.
     /// </summary>
-    /// <param name="subkey">Starting subkey for tree to delete.</param>
+    /// <remarks>
+    /// Associated values are not deleted.
+    /// </remarks>
+    /// <param name="subkey">
+    /// Starting subkey for tree to delete.
+    /// </param>
+    /// <exception cref="RegistryException">
+    /// Thrown at attempt to delete subtree in a readonly key.
+    /// </exception>
     public void DeleteSubKeyTree(string subkey)
     {
-        Debug.Assert(_writable);
+        if (!_writable)
+        {
+            throw new RegistryException(
+                "Cannot delete subtree in a readonly key."
+            );
+        }
+
         string treeRoot = $"{_path}\\{subkey}";
         string[] keysToRemove = Array.Empty<string>();
-        foreach (var key in Keys.Keys)
+        foreach (var key in _keys.Keys)
         {
             if (key.StartsWith(treeRoot))
             {
@@ -99,61 +158,146 @@ public class MockedRegistryKey : IRegistryKey
 
         foreach (var key in keysToRemove)
         {
-            bool wasInDictionary = Keys.Remove(key);
-            Debug.Assert(wasInDictionary);
+            bool wasInDictionary = _keys.Remove(key);
+            if (!wasInDictionary)
+            {
+                throw new RegistryException(
+                    $"Key {key} was supposed be in "
+                        + "the registry but it was not."
+                );
+            }
         }
     }
 
-    public object? GetValue(string? name, object? defaultValue)
+    /// <summary>
+    /// Get value from "registry".
+    /// </summary>
+    /// <param name="valueName">
+    /// Name of the value in the current key.
+    /// </param>
+    /// <param name="defaultValue">
+    /// Default return value.
+    /// </param>
+    /// <returns>
+    /// Object representing value with the given name, or default value if
+    /// "registry value" with the given name does not exist in the current key.
+    /// </returns>
+    public object? GetValue(string valueName, object? defaultValue)
     {
-        Debug.Assert(name != null);
         const string newPath = "{_path}\\{name}";
-        Debug.Assert(Keys[_path].Contains(newPath));
-        return Values[newPath];
+        if (!_values.ContainsKey(newPath))
+        {
+            return defaultValue;
+        }
+
+        return _values[newPath];
     }
 
-    public Microsoft.Win32.RegistryValueKind GetValueKind(string? name)
+    /// <summary>
+    /// Get type of value in "registry".
+    /// </summary>
+    /// <param name="valueName">
+    /// Name of the value in the current key.
+    /// </param>
+    /// <returns>
+    /// <see cref="RegistryValueKind.String"/> for string value,
+    /// <see cref="RegistryValueKind.None"/> for null value,
+    /// <see cref="RegistryValueKind.Unknown"/> otherwise.
+    /// </returns>
+    public RegistryValueKind GetValueKind(string valueName)
     {
-        object? value = GetValue(name, null);
+        object? value = GetValue(valueName, null);
         if (value is string)
         {
-            return Microsoft.Win32.RegistryValueKind.String;
+            return RegistryValueKind.String;
         }
         else if (value == null)
         {
-            return Microsoft.Win32.RegistryValueKind.None;
+            return RegistryValueKind.None;
         }
         else
         {
-            return Microsoft.Win32.RegistryValueKind.Unknown;
+            return RegistryValueKind.Unknown;
         }
     }
 
-    public IRegistryKey? OpenSubKey(string key)
+    /// <summary>
+    /// Open the subkey of the key.
+    /// </summary>
+    /// <remarks>
+    /// Opens the subkey as readonly.
+    /// </remarks>
+    /// <param name="subkey">
+    /// The name of the subkey to open.
+    /// </param>
+    /// <returns>
+    /// <see cref="MockedRegistryKey"/> corresponding to the requested subkey.
+    /// </returns>
+    /// <exception cref="RegistryException">
+    /// Thrown if subkey does not exist.
+    /// </exception>
+    public IRegistryKey OpenSubKey(string subkey)
     {
-        string newPath = $"{_path}\\{key}";
-        Debug.Assert(Keys.ContainsKey(newPath));
-        return new MockedRegistryKey(path: newPath, keys: Keys, values: Values);
-    }
+        string newPath = $"{_path}\\{subkey}";
+        if (!_keys.ContainsKey(newPath))
+        {
+            throw new RegistryException("Cannot open non-existent subkey.");
+        }
 
-    public IRegistryKey? OpenSubKeyAsWritable(string key)
-    {
-        string newPath = $"{_path}\\{key}";
-        Debug.Assert(Keys.ContainsKey(newPath));
         return new MockedRegistryKey(
             path: newPath,
-            keys: Keys,
-            values: Values,
+            keys: _keys,
+            values: _values
+        );
+    }
+
+    /// <summary>
+    /// Open the subkey of the key.
+    /// </summary>
+    /// <remarks>
+    /// Opens the subkey as writable.
+    /// </remarks>
+    /// <param name="subkey">
+    /// The name of the subkey to open.
+    /// </param>
+    /// <returns>
+    /// <see cref="MockedRegistryKey"/> corresponding to the requested subkey.
+    /// </returns>
+    /// <exception cref="RegistryException">
+    /// Thrown if subkey does not exist.
+    /// </exception>
+    public IRegistryKey OpenSubKeyAsWritable(string subkey)
+    {
+        string newPath = $"{_path}\\{subkey}";
+        if (!_keys.ContainsKey(newPath))
+        {
+            throw new RegistryException("Cannot open non-existent subkey.");
+        }
+
+        return new MockedRegistryKey(
+            path: newPath,
+            keys: _keys,
+            values: _values,
             writable: true
         );
     }
 
-    public void SetValue(string? name, object value)
+    /// <summary>
+    /// Set the registry value in the given key.
+    /// </summary>
+    /// <param name="valueName">
+    /// The short name of the registry value.
+    /// </param>
+    /// <param name="value">
+    /// The value to set.
+    /// </param>
+    public void SetValue(string valueName, object value)
     {
-        string valuePath = $"{_path}\\{name}";
-        Values[valuePath] = value;
+        string valuePath = $"{_path}\\{valueName}";
+        _values[valuePath] = value;
     }
 
+    /// <inheritdoc/>
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
@@ -162,9 +306,9 @@ public class MockedRegistryKey : IRegistryKey
         }
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
