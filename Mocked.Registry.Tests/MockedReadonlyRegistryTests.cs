@@ -3,11 +3,11 @@ using Fi.Pentode.Registry.Lib;
 
 namespace Fi.Pentode.Mocked.Registry.Test
 {
-    public class MockedRogistryTests
+    public class MockedReadonlyRegistryTests
     {
         private readonly MockedRegistryKey _emptyLocalMachine;
 
-        public MockedRogistryTests()
+        public MockedReadonlyRegistryTests()
         {
             const string localMachine = "localMachine";
             var emptyKeys = new Dictionary<string, string[]>()
@@ -23,7 +23,7 @@ namespace Fi.Pentode.Mocked.Registry.Test
         }
 
         [Fact]
-        public void FreshRegistryIsEmpty()
+        public void MockedRegistry_FreshRegistry_MustBeEmpty()
         {
             Assert.Empty(_emptyLocalMachine.SubKeyNames);
             Assert.Empty(_emptyLocalMachine.ValueNames);
