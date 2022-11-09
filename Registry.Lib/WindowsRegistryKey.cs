@@ -11,30 +11,34 @@ public class WindowsRegistryKey : IRegistryKey
     public WindowsRegistryKey(Microsoft.Win32.RegistryKey key) =>
         _registryKey = key;
 
-    public IRegistryKey CreateSubKey(string key) =>
-        new WindowsRegistryKey(_registryKey.CreateSubKey(key));
+    public IRegistryKey CreateSubKey(string subkey) =>
+        new WindowsRegistryKey(_registryKey.CreateSubKey(subkey));
 
     public void DeleteSubKeyTree(string subkey) =>
         _registryKey.DeleteSubKeyTree(subkey, throwOnMissingSubKey: false);
 
     public IEnumerable<string> SubKeyNames => _registryKey.GetSubKeyNames();
 
-    public object? GetValue(string? name, object? defaultValue) =>
-        _registryKey.GetValue(name, defaultValue);
+    public object? GetValue(string valueName, object? defaultValue) =>
+        _registryKey.GetValue(valueName, defaultValue);
 
-    public RegistryValueKind GetValueKind(string? name) =>
-        _registryKey.GetValueKind(name);
+    public RegistryValueKind GetValueKind(string valueName) =>
+        _registryKey.GetValueKind(valueName);
 
     public IEnumerable<string> ValueNames => _registryKey.GetValueNames();
 
-    public IRegistryKey? OpenSubKey(string key) =>
-        new WindowsRegistryKey(_registryKey.OpenSubKey(key)!);
+    public IRegistryKey? OpenSubKey(string subkey) =>
+        new WindowsRegistryKey(_registryKey.OpenSubKey(subkey)!);
 
-    public IRegistryKey? OpenSubKeyAsWritable(string key) =>
-        new WindowsRegistryKey(_registryKey.OpenSubKey(key, writable: true)!);
+    public IRegistryKey? OpenSubKeyAsWritable(string subkey)
+    {
+        return new WindowsRegistryKey(
+            _registryKey.OpenSubKey(subkey, writable: true)!
+        );
+    }
 
-    public void SetValue(string? name, object value) =>
-        _registryKey.SetValue(name, value);
+    public void SetValue(string valueName, object value) =>
+        _registryKey.SetValue(valueName, value);
 
     protected virtual void Dispose(bool disposing)
     {
