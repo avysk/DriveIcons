@@ -2,34 +2,54 @@
 
 namespace Fi.Pentode.Registry.Lib;
 
-public class WindowsRegistryKey : IRegistryKey
+/// <summary>
+/// The wrapper class, presenting Windows registry keys vio <see
+/// cref="IRegistryKey"/> interface.
+/// </summary>
+public sealed class WindowsRegistryKey : IRegistryKey
 {
-    private readonly Microsoft.Win32.RegistryKey _registryKey;
+    private readonly RegistryKey _registryKey;
 
     private bool _disposedValue;
 
-    public WindowsRegistryKey(Microsoft.Win32.RegistryKey key) =>
-        _registryKey = key;
+    /// <summary>
+    /// Create wrapper for the given Windows registry key.
+    /// </summary>
+    /// <remarks>
+    /// The corresponding Windows registry key will be readonly.
+    /// </remarks>
+    /// <param name="key">
+    /// The Windows registry key to create wrapper for.
+    /// </param>
+    public WindowsRegistryKey(RegistryKey key) => _registryKey = key;
 
+    /// <inheritdoc/>
     public IRegistryKey CreateSubKey(string subkey) =>
         new WindowsRegistryKey(_registryKey.CreateSubKey(subkey));
 
+    /// <inheritdoc/>
     public void DeleteSubKeyTree(string subkey) =>
         _registryKey.DeleteSubKeyTree(subkey, throwOnMissingSubKey: false);
 
+    /// <inheritdoc/>
     public IEnumerable<string> SubKeyNames => _registryKey.GetSubKeyNames();
 
+    /// <inheritdoc/>
     public object? GetValue(string valueName, object? defaultValue) =>
         _registryKey.GetValue(valueName, defaultValue);
 
+    /// <inheritdoc/>
     public RegistryValueKind GetValueKind(string valueName) =>
         _registryKey.GetValueKind(valueName);
 
+    /// <inheritdoc/>
     public IEnumerable<string> ValueNames => _registryKey.GetValueNames();
 
+    /// <inheritdoc/>
     public IRegistryKey? OpenSubKey(string subkey) =>
         new WindowsRegistryKey(_registryKey.OpenSubKey(subkey)!);
 
+    /// <inheritdoc/>
     public IRegistryKey? OpenSubKeyAsWritable(string subkey)
     {
         return new WindowsRegistryKey(
@@ -37,21 +57,19 @@ public class WindowsRegistryKey : IRegistryKey
         );
     }
 
+    /// <inheritdoc/>
     public void SetValue(string valueName, object value) =>
         _registryKey.SetValue(valueName, value);
 
-    protected virtual void Dispose(bool disposing)
+    /// <inheritdoc/>
+    public void Dispose()
     {
-        if (!_disposedValue && disposing)
+        if (!_disposedValue)
         {
             _registryKey.Dispose();
             _disposedValue = true;
         }
-    }
 
-    public void Dispose()
-    {
-        Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 }

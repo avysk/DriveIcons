@@ -1,16 +1,25 @@
 namespace Fi.Pentode.Registry.Lib;
 
-public class RegistryException : Exception
+/// <summary>
+/// Exception to throw if something is wrong with registry.
+/// </summary>
+public sealed class RegistryException : Exception
 {
+    /// <inheritdoc/>
     public RegistryException() { }
 
+    /// <inheritdoc/>
     public RegistryException(string message) : base(message) { }
 
+    /// <inheritdoc/>
     public RegistryException(string message, Exception inner)
         : base(message, inner) { }
 }
 
-public class DriveIcons
+/// <summary>
+/// The class to set disks' icons.
+/// </summary>
+public sealed class DriveIcons
 {
     private readonly IRegistryKey _localMachine;
 
@@ -200,11 +209,35 @@ public class DriveIcons
         driveIconsKey.DeleteSubKeyTree(letter);
     }
 
+    /// <summary>
+    /// Create the instance of <see cref="DriveIcons"/> given the
+    /// <strong>HKEY_LOCAL_MACHINE</strong> registry key.
+    /// </summary>
+    /// <param name="registry">
+    /// The registry key representing <strong>HKEY_LOCAL_MACHINE</strong>.
+    /// </param>
     public DriveIcons(IRegistryKey registry)
     {
         _localMachine = registry;
     }
 
+    /// <summary>
+    /// Get the path to custom drive icon for the given disk.
+    /// </summary>
+    /// <remarks>
+    /// The path is read from the registry. If it is not set,
+    /// <strong>null</strong> is returned.
+    /// </remarks>
+    /// <param name="disk">
+    /// The character, representing the disk.
+    /// </param>
+    /// <returns>
+    /// The peth (inside quotes) to the custom disk icon or
+    /// <strong>null</strong>.
+    /// </returns>
+    /// <exception cref="RegistryException">
+    /// Thrown, if the disk specified is not between 'A' and 'Z'.
+    /// </exception>
     public string? this[char disk]
     {
         get
