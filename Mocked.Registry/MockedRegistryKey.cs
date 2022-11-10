@@ -7,7 +7,7 @@ namespace Fi.Pentode.MockedRegistry;
 /// <summary>
 /// In-memory "registry" for testing.
 /// </summary>
-public class MockedRegistryKey : IRegistryKey
+public sealed class MockedRegistryKey : IRegistryKey
 {
     private bool _disposedValue;
 
@@ -298,18 +298,13 @@ public class MockedRegistryKey : IRegistryKey
     }
 
     /// <inheritdoc/>
-    protected virtual void Dispose(bool disposing)
+    public void Dispose()
     {
         if (!_disposedValue)
         {
             _disposedValue = true;
         }
-    }
 
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 }
