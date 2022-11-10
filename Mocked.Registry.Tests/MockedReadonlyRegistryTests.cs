@@ -37,7 +37,7 @@ namespace Fi.Pentode.Mocked.Registry.Test
             );
             Assert.IsType<RegistryException>(exception);
             Assert.Equal(
-                "Cannot create subkeys in readonly key.",
+                "Cannot create subkeys in a readonly key.",
                 exception.Message
             );
         }
