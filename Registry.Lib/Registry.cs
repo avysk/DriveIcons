@@ -76,39 +76,37 @@ public sealed class DriveIcons
     private string? _iconPath([CheckDisk] char disk)
     {
         string letter = disk.ToString();
-        string error;
 
-        using IRegistryKey driveIconsKey = _driveIconsKey;
-
-        if (!driveIconsKey.SubKeyNames.Contains(letter))
+        if (!_driveIconsKey.SubKeyNames.Contains(letter))
         {
             return null;
         }
 
-        using IRegistryKey? driveIconKey = driveIconsKey.OpenSubKey(letter);
+        using IRegistryKey? driveIconKey = _driveIconsKey.OpenSubKey(letter);
         if (driveIconKey == null)
         {
-            error = $"Key for disk {letter} both does and does not exist.";
-            throw new RegistryException(error);
+            throw new RegistryException(
+                $"Key for disk {letter} both does and does not exist."
+            );
         }
 
         const string defaultIcon = "DefaultIcon";
 
         if (!driveIconKey.SubKeyNames.Contains(defaultIcon))
         {
-            error =
+            throw new RegistryException(
                 $"Key for disk {letter} does exist but does not have "
-                + $"{defaultIcon} subkey.";
-            throw new RegistryException(error);
+                    + $"{defaultIcon} subkey."
+            );
         }
 
         using IRegistryKey? finalKey = driveIconKey.OpenSubKey(defaultIcon);
         if (finalKey == null)
         {
-            error =
+            throw new RegistryException(
                 $"Default icon subkey for disk {letter} both does "
-                + "and does not exist.";
-            throw new RegistryException(error);
+                    + "and does not exist."
+            );
         }
 
         object? value = finalKey.GetValue(string.Empty, null);
@@ -122,10 +120,10 @@ public sealed class DriveIcons
         );
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
-            error =
+            throw new RegistryException(
                 $"There is a default icon value for disk {disk} "
-                + "but it is not a string.";
-            throw new RegistryException(error);
+                    + "but it is not a string."
+            );
         }
 
         return (string)value;
@@ -144,57 +142,56 @@ public sealed class DriveIcons
     private void _deleteIconPath([CheckDisk] char disk)
     {
         string letter = disk.ToString();
-        string error;
 
-        using IRegistryKey driveIconsKey = _driveIconsKeyWritable;
-        if (!driveIconsKey.SubKeyNames.Contains(letter))
+        if (!_driveIconsKey.SubKeyNames.Contains(letter))
         {
             // If key for drive does not exist, we do nothing.
             // Otherwise, we will check that it is well-formed and delete it.
             return;
         }
 
-        using IRegistryKey driveIconKey = driveIconsKey.OpenSubKey(letter)!;
+        using IRegistryKey driveIconKey = _driveIconsKey.OpenSubKey(letter)!;
         if (driveIconKey == null)
         {
-            error = $"Key for disk {letter} both does and does not exist.";
-            throw new RegistryException(error);
+            throw new RegistryException(
+                $"Key for disk {letter} both does and does not exist."
+            );
         }
 
         const string defaultIcon = "DefaultIcon";
         if (!driveIconKey.SubKeyNames.Contains(defaultIcon))
         {
-            error =
+            throw new RegistryException(
                 $"Key for disk {letter} does exist but does not have "
-                + $"{defaultIcon} subkey.";
-            throw new RegistryException(error);
+                    + $"{defaultIcon} subkey."
+            );
         }
 
         using IRegistryKey? finalKey = driveIconKey.OpenSubKey(defaultIcon);
         if (finalKey == null)
         {
-            error =
+            throw new RegistryException(
                 $"Default icon subkey for disk {letter} both does "
-                + "and does not exist.";
-            throw new RegistryException(error);
+                    + "and does not exist."
+            );
         }
 
         if (finalKey.SubKeyNames.Any())
         {
-            error =
+            throw new RegistryException(
                 $"Default icon subkey for disk {letter} "
-                + "looks very strange.";
-            throw new RegistryException(error);
+                    + "looks very strange."
+            );
         }
 
         IEnumerable<string> names = finalKey.ValueNames;
         int length = names.Count();
         if ((length != 1) || (!names.Contains(string.Empty)))
         {
-            error =
+            throw new RegistryException(
                 $"Default icon subkey for disk {letter} "
-                + "looks very strange.";
-            throw new RegistryException(error);
+                    + "looks very strange."
+            );
         }
 
         Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(
@@ -202,13 +199,13 @@ public sealed class DriveIcons
         );
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
-            error =
+            throw new RegistryException(
                 $"Default icon subkey for disk {letter} "
-                + "looks very strange.";
-            throw new RegistryException(error);
+                    + "looks very strange."
+            );
         }
 
-        driveIconsKey.DeleteSubKeyTree(letter);
+        _driveIconsKey.DeleteSubKeyTree(letter);
     }
 
     /// <summary>
