@@ -23,6 +23,16 @@ public sealed class DriveIcons
 {
     private readonly IRegistryKey _localMachine;
 
+    /// <summary>
+    /// Minimal supported disk.
+    /// </summary>
+    public const char MinDisk = 'A';
+
+    /// <summary>
+    /// Maximal supported disk.
+    /// </summary>
+    public const char MaxDisk = 'Z';
+
     private IRegistryKey _driveIconsKey
     {
         get
@@ -63,15 +73,7 @@ public sealed class DriveIcons
         }
     }
 
-    private static void _verifyDiskIsValid(char disk)
-    {
-        if ((disk < 'A') || (disk > 'Z'))
-        {
-            throw new IndexOutOfRangeException($"Disk {disk} is not in range");
-        }
-    }
-
-    private string? _iconPath(char disk)
+    private string? _iconPath([CheckDisk] char disk)
     {
         string letter = disk.ToString();
         string error;
@@ -129,7 +131,7 @@ public sealed class DriveIcons
         return (string)value;
     }
 
-    private void _writeIconPath(char disk, string newPath)
+    private void _writeIconPath([CheckDisk] char disk, string newPath)
     {
         string letter = disk.ToString();
         using IRegistryKey driveIconsKey = _driveIconsKeyWritable;
@@ -139,7 +141,7 @@ public sealed class DriveIcons
         finalKey.SetValue(string.Empty, newPath);
     }
 
-    private void _deleteIconPath(char disk)
+    private void _deleteIconPath([CheckDisk] char disk)
     {
         string letter = disk.ToString();
         string error;
@@ -240,14 +242,9 @@ public sealed class DriveIcons
     /// </exception>
     public string? this[char disk]
     {
-        get
-        {
-            _verifyDiskIsValid(disk);
-            return _iconPath(disk);
-        }
+        get { return _iconPath(disk); }
         set
         {
-            _verifyDiskIsValid(disk);
             if (value != null)
             {
                 _writeIconPath(disk, value);
