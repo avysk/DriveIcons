@@ -21,7 +21,7 @@ public sealed class RegistryException : Exception
 /// </summary>
 public sealed class DriveIcons
 {
-    private readonly IRegistryKey _localMachine;
+    private readonly IRegistryKey _rootKey;
 
     /// <summary>
     /// Minimal supported disk.
@@ -37,18 +37,34 @@ public sealed class DriveIcons
     {
         get
         {
-            const string keyString =
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
-                + "DriveIcons";
-            IRegistryKey? driveKey = _localMachine.OpenSubKey(keyString);
-            if (driveKey == null)
+            List<string> subkeys =
+                new()
+                {
+                    "SOFTWARE",
+                    "Microsoft",
+                    "Windows",
+                    "CurrentVersion",
+                    "Explorer",
+                    "DriveIcons"
+                };
+            IRegistryKey? lastKey = _rootKey;
+            foreach (var subkey in subkeys)
             {
-                throw new RegistryException(
-                    $"No key {keyString} is found in registry"
-                );
+                if (!ReferenceEquals(lastKey, _rootKey))
+                {
+                    lastKey!.Dispose();
+                }
+                IRegistryKey? nextKey = lastKey.OpenSubKey(subkey);
+                lastKey = nextKey;
+                if (nextKey == null)
+                {
+                    throw new RegistryException(
+                        $"Failed to get subkey {subkey}."
+                    );
+                }
             }
 
-            return driveKey;
+            return lastKey;
         }
     }
 
@@ -56,20 +72,34 @@ public sealed class DriveIcons
     {
         get
         {
-            const string keyString =
-                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\"
-                + "DriveIcons";
-            IRegistryKey? driveKey = _localMachine.OpenSubKeyAsWritable(
-                keyString
-            );
-            if (driveKey == null)
+            List<string> subkeys =
+                new()
+                {
+                    "SOFTWARE",
+                    "Microsoft",
+                    "Windows",
+                    "CurrentVersion",
+                    "Explorer",
+                    "DriveIcons"
+                };
+            IRegistryKey? lastKey = _rootKey;
+            foreach (var subkey in subkeys)
             {
-                throw new RegistryException(
-                    $"No key {keyString} is found in registry"
-                );
+                if (!ReferenceEquals(lastKey, _rootKey))
+                {
+                    lastKey!.Dispose();
+                }
+                IRegistryKey? nextKey = lastKey.OpenSubKeyAsWritable(subkey);
+                lastKey = nextKey;
+                if (nextKey == null)
+                {
+                    throw new RegistryException(
+                        $"Failed to get subkey {subkey}."
+                    );
+                }
             }
 
-            return driveKey;
+            return lastKey;
         }
     }
 
@@ -210,14 +240,17 @@ public sealed class DriveIcons
 
     /// <summary>
     /// Create the instance of <see cref="DriveIcons"/> given the
-    /// <strong>HKEY_LOCAL_MACHINE</strong> registry key.
+    /// root registry key.
     /// </summary>
+    /// <remarks>
+    /// The root key is never disposed.
+    /// </remarks>
     /// <param name="registry">
-    /// The registry key representing <strong>HKEY_LOCAL_MACHINE</strong>.
+    /// The registry key representing the root key.
     /// </param>
     public DriveIcons(IRegistryKey registry)
     {
-        _localMachine = registry;
+        _rootKey = registry;
     }
 
     /// <summary>
