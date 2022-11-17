@@ -13,13 +13,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DriveIcons.App", "DriveIcons.App\DriveIcons.App.csproj", "{B2714999-2A81-4B75-9DE3-5FF05958B332}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{55DAD619-A1E1-48FA-BA97-7FBAA1E3E278}"
-	ProjectSection(SolutionItems) = preProject
-		.csharpierrc.yaml = .csharpierrc.yaml
-		.editorconfig = .editorconfig
-		Directory.Build.props = Directory.Build.props
-		.github\workflows\dotnet-desktop.yml = .github\workflows\dotnet-desktop.yml
-		README.md = README.md
-	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Registry.CLI", "Registry.CLI\Registry.CLI.fsproj", "{2A00B09A-1572-41C2-87FE-DB0C0E386C80}"
 EndProject
@@ -31,6 +24,26 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry.Tests", "Mocked.Registry.Tests\Mocked.Registry.Tests.csproj", "{86F14D9A-3856-48DF-A524-447FB5D8593D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E79D3631-67C9-4415-9566-62230699A413} = {E79D3631-67C9-4415-9566-62230699A413}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub automation", "GitHub automation", "{5135C65A-9051-4893-A6AA-9CBD176D62C9}"
+	ProjectSection(SolutionItems) = preProject
+		.github\dependabot.yml = .github\dependabot.yml
+		.github\workflows\dotnet-desktop.yml = .github\workflows\dotnet-desktop.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmus and stuff", "Roadmus and stuff", "{E6FF173C-F270-49A6-AD74-00970586693E}"
+	ProjectSection(SolutionItems) = preProject
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Visual studio automation", "Visual studio automation", "{6E3CF5FE-F63D-42BA-A6E9-9388BBD6CC88}"
+	ProjectSection(SolutionItems) = preProject
+		.csharpierrc.yaml = .csharpierrc.yaml
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Global
@@ -63,6 +76,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5135C65A-9051-4893-A6AA-9CBD176D62C9} = {55DAD619-A1E1-48FA-BA97-7FBAA1E3E278}
+		{E6FF173C-F270-49A6-AD74-00970586693E} = {55DAD619-A1E1-48FA-BA97-7FBAA1E3E278}
+		{6E3CF5FE-F63D-42BA-A6E9-9388BBD6CC88} = {55DAD619-A1E1-48FA-BA97-7FBAA1E3E278}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AA1E4B1-5643-47E5-AACA-E3D53617F021}
