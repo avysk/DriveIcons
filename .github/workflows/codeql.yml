@@ -33,9 +33,6 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
-
     - run: dotnet build /p:UseSharedCompilation=false
 
     - name: Perform CodeQL Analysis
