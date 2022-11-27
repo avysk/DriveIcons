@@ -173,7 +173,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// Get value from "registry".
     /// </summary>
     /// <param name="valueName">
-    /// Name of the value in the current key.
+    /// Short name of the value in the current key.
     /// </param>
     /// <param name="defaultValue">
     /// Default return value.
