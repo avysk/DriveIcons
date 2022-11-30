@@ -12,54 +12,54 @@ namespace Fi.Pentode.Registry.Lib;
 public interface IRegistryKey : IDisposable
 {
     /// <summary>
-    /// Open for writing the subkey of the registry key.
+    /// Open for writing the subKey of the registry key.
     /// </summary>
     /// <remarks>
-    /// If the subkey does not exist, an empty subkey is created first.
+    /// If the subKey does not exist, an empty subKey is created first.
     /// </remarks>
-    /// <param name="subkey">
-    /// The name of the subkey,
+    /// <param name="subKey">
+    /// The name of the subKey,
     /// </param>
     /// <returns>
-    /// The subkey opened.
+    /// The subKey opened.
     /// </returns>
-    public IRegistryKey CreateSubKey(string subkey);
+    public IRegistryKey CreateSubKey(string subKey);
 
     /// <summary>
-    /// Open for reading the subkey of the registry key.
+    /// Open for reading the subKey of the registry key.
     /// </summary>
     /// <remarks>
-    /// The subkey must exist. The subkey is opened as readonly,
+    /// The subKey must exist. The subKey is opened as readonly,
     /// </remarks>
-    /// <param name="subkey">
-    /// The name of the subkey,
+    /// <param name="subKey">
+    /// The name of the subKey,
     /// </param>
     /// <returns>
-    /// The subkey opened.
+    /// The subKey opened.
     /// </returns>
-    public IRegistryKey? OpenSubKey(string subkey);
+    public IRegistryKey? OpenSubKey(string subKey);
 
     /// <summary>
-    /// Open for writing the subkey of the registry key.
+    /// Open for writing the subKey of the registry key.
     /// </summary>
     /// <remarks>
-    /// The subkey must exist.
+    /// The subKey must exist.
     /// </remarks>
-    /// <param name="subkey">
-    /// The name of the subkey,
+    /// <param name="subKey">
+    /// The name of the subKey,
     /// </param>
     /// <returns>
-    /// The subkey opened.
+    /// The subKey opened.
     /// </returns>
-    public IRegistryKey? OpenSubKeyAsWritable(string subkey);
+    public IRegistryKey? OpenSubKeyAsWritable(string subKey);
 
     /// <summary>
-    /// Delete a subtree starting from the given subkey.
+    /// Delete a subtree starting from the given subKey.
     /// </summary>
-    /// <param name="subkey">
-    /// A short name of the subkey at the root of the tree to delete.
+    /// <param name="subKey">
+    /// A short name of the subKey at the root of the tree to delete.
     /// </param>
-    public void DeleteSubKeyTree(string subkey);
+    public void DeleteSubKeyTree(string subKey);
 
     /// <summary>
     /// The prorperty represents the names of registry subkeys in the key.

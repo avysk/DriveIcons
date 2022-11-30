@@ -1,8 +1,7 @@
 ﻿using Fi.Pentode.Registry.Lib;
-
 using Microsoft.Win32;
 
-namespace Fi.Pentode.MockedRegistry;
+namespace Fi.Pentode.Mocked.Registry;
 
 /// <summary>
 /// In-memory "registry" for testing.
@@ -22,7 +21,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </summary>
     /// <returns>
     /// Dictionary keys are "full names of registry keys" without trailing \,
-    /// values are arrays of full names of subkeys and full names of "registry
+    /// values are arrays of full names of subKeys and full names of "registry
     /// values".
     /// </returns>
     public static Dictionary<string, string[]> GetKeys() => _keys;
@@ -42,8 +41,8 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// In-memory "registry" for testing.
     /// </summary>
     /// <param name="path">Path of selected key.</param>
-    /// <param name="keys">The dictionary, mapping cefistry key names to arrays
-    /// of subkey and value names.</param>
+    /// <param name="keys">The dictionary, mapping registry key names to arrays
+    /// of subKey and value names.</param>
     /// <param name="values">The dictionary, mapping rvalue names to their
     /// values.</param>
     /// <param name="writable">Specifies, if the selected key is supposed
@@ -56,8 +55,12 @@ public sealed class MockedRegistryKey : IRegistryKey
     )
     {
         _path = path;
+#pragma warning disable S3010 // Static fields should not be updated in constructors
         _keys = keys;
+#pragma warning restore S3010 // Static fields should not be updated in constructors
+#pragma warning disable S3010 // Static fields should not be updated in constructors
         _values = values;
+#pragma warning restore S3010 // Static fields should not be updated in constructors
         _writable = writable;
     }
 
@@ -73,10 +76,10 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Allows to get subkeys of this key.
+    /// Allows to get subKeys of this key.
     /// </summary>
     /// <value>
-    /// The names of the subkeys in the key.
+    /// The names of the subKeys in the key.
     /// </value>
     public IEnumerable<string> SubKeyNames
     {
@@ -84,32 +87,32 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Get the subkey of this key.
+    /// Get the subKey of this key.
     /// </summary>
     /// <remarks>
-    /// If the subkey does not exist, the empty subkey is created first.
-    /// The returned subkey is writable.
+    /// If the subKey does not exist, the empty subKey is created first.
+    /// The returned subKey is writable.
     /// </remarks>
-    /// <param name="subkey">
-    /// The short name of the requested subkey.
+    /// <param name="subKey">
+    /// The short name of the requested subKey.
     /// </param>
     /// <returns>
     /// <see cref="MockedRegistryKey"/> corresponding to the writable
-    /// subkey of the key.
+    /// subKey of the key.
     /// </returns>
     /// <exception cref="RegistryException">
     /// Thrown if the key is not writable.
     /// </exception>
-    public IRegistryKey CreateSubKey(string subkey)
+    public IRegistryKey CreateSubKey(string subKey)
     {
         if (!_writable)
         {
             throw new RegistryException(
-                "Cannot create subkeys in a readonly key."
+                "Cannot create subKeys in a readonly key."
             );
         }
 
-        string newPath = $"{_path}\\{subkey}";
+        string newPath = $"{_path}\\{subKey}";
 
         if (!_keys.ContainsKey(newPath))
         {
@@ -126,18 +129,18 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Deletes key tree for the given subkey.
+    /// Deletes key tree for the given subKey.
     /// </summary>
     /// <remarks>
     /// Associated values are not deleted.
     /// </remarks>
-    /// <param name="subkey">
-    /// Starting subkey for tree to delete.
+    /// <param name="subKey">
+    /// Starting subKey for tree to delete.
     /// </param>
     /// <exception cref="RegistryException">
     /// Thrown at attempt to delete subtree in a readonly key.
     /// </exception>
-    public void DeleteSubKeyTree(string subkey)
+    public void DeleteSubKeyTree(string subKey)
     {
         if (!_writable)
         {
@@ -146,17 +149,12 @@ public sealed class MockedRegistryKey : IRegistryKey
             );
         }
 
-        string treeRoot = $"{_path}\\{subkey}";
-        string[] keysToRemove = Array.Empty<string>();
-        foreach (var key in _keys.Keys)
-        {
-            if (key.StartsWith(treeRoot))
-            {
-                _ = keysToRemove.Append(key);
-            }
-        }
-
-        foreach (var key in keysToRemove)
+        string treeRoot = $"{_path}\\{subKey}";
+        foreach (
+            var key in from k in _keys.Keys
+            where k.StartsWith(treeRoot)
+            select k
+        )
         {
             bool wasInDictionary = _keys.Remove(key);
             if (!wasInDictionary)
@@ -222,26 +220,26 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Open the subkey of the key.
+    /// Open the subKey of the key.
     /// </summary>
     /// <remarks>
-    /// Opens the subkey as readonly.
+    /// Opens the subKey as readonly.
     /// </remarks>
-    /// <param name="subkey">
-    /// The name of the subkey to open.
+    /// <param name="subKey">
+    /// The name of the subKey to open.
     /// </param>
     /// <returns>
-    /// <see cref="MockedRegistryKey"/> corresponding to the requested subkey.
+    /// <see cref="MockedRegistryKey"/> corresponding to the requested subKey.
     /// </returns>
     /// <exception cref="RegistryException">
-    /// Thrown if subkey does not exist.
+    /// Thrown if subKey does not exist.
     /// </exception>
-    public IRegistryKey OpenSubKey(string subkey)
+    public IRegistryKey OpenSubKey(string subKey)
     {
-        string newPath = $"{_path}\\{subkey}";
+        string newPath = $"{_path}\\{subKey}";
         if (!_keys.ContainsKey(newPath))
         {
-            throw new RegistryException("Cannot open non-existent subkey.");
+            throw new RegistryException("Cannot open non-existent subKey.");
         }
 
         return new MockedRegistryKey(
@@ -252,26 +250,26 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Open the subkey of the key.
+    /// Open the subKey of the key.
     /// </summary>
     /// <remarks>
-    /// Opens the subkey as writable.
+    /// Opens the subKey as writable.
     /// </remarks>
-    /// <param name="subkey">
-    /// The name of the subkey to open.
+    /// <param name="subKey">
+    /// The name of the subKey to open.
     /// </param>
     /// <returns>
-    /// <see cref="MockedRegistryKey"/> corresponding to the requested subkey.
+    /// <see cref="MockedRegistryKey"/> corresponding to the requested subKey.
     /// </returns>
     /// <exception cref="RegistryException">
-    /// Thrown if subkey does not exist.
+    /// Thrown if subKey does not exist.
     /// </exception>
-    public IRegistryKey OpenSubKeyAsWritable(string subkey)
+    public IRegistryKey OpenSubKeyAsWritable(string subKey)
     {
-        string newPath = $"{_path}\\{subkey}";
+        string newPath = $"{_path}\\{subKey}";
         if (!_keys.ContainsKey(newPath))
         {
-            throw new RegistryException("Cannot open non-existent subkey.");
+            throw new RegistryException("Cannot open non-existent subKey.");
         }
 
         return new MockedRegistryKey(
@@ -304,7 +302,5 @@ public sealed class MockedRegistryKey : IRegistryKey
         {
             _disposedValue = true;
         }
-
-        GC.SuppressFinalize(this);
     }
 }

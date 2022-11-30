@@ -3,14 +3,14 @@
 public class RegistryExceptionTests
 {
     [Fact]
-    public void RegistryException_BasicConstructorIsCalleed_ItWorks()
+    public void RegistryException_BasicConstructorIsCalled_ItWorks()
     {
         var exception = new RegistryException();
         Assert.IsType<RegistryException>(exception);
     }
 
     [Fact]
-    public void RegistryException_ConstuctorWithMessage_SetsMessage()
+    public void RegistryException_ConstructorWithMessage_SetsMessage()
     {
         var exception = new RegistryException("foobar");
         Assert.IsType<RegistryException>(exception);

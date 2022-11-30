@@ -24,12 +24,12 @@ public sealed class WindowsRegistryKey : IRegistryKey
     public WindowsRegistryKey(RegistryKey key) => _registryKey = key;
 
     /// <inheritdoc/>
-    public IRegistryKey CreateSubKey(string subkey) =>
-        new WindowsRegistryKey(_registryKey.CreateSubKey(subkey));
+    public IRegistryKey CreateSubKey(string subKey) =>
+        new WindowsRegistryKey(_registryKey.CreateSubKey(subKey));
 
     /// <inheritdoc/>
-    public void DeleteSubKeyTree(string subkey) =>
-        _registryKey.DeleteSubKeyTree(subkey, throwOnMissingSubKey: false);
+    public void DeleteSubKeyTree(string subKey) =>
+        _registryKey.DeleteSubKeyTree(subKey, throwOnMissingSubKey: false);
 
     /// <inheritdoc/>
     public IEnumerable<string> SubKeyNames => _registryKey.GetSubKeyNames();
@@ -46,14 +46,14 @@ public sealed class WindowsRegistryKey : IRegistryKey
     public IEnumerable<string> ValueNames => _registryKey.GetValueNames();
 
     /// <inheritdoc/>
-    public IRegistryKey? OpenSubKey(string subkey) =>
-        new WindowsRegistryKey(_registryKey.OpenSubKey(subkey)!);
+    public IRegistryKey? OpenSubKey(string subKey) =>
+        new WindowsRegistryKey(_registryKey.OpenSubKey(subKey)!);
 
     /// <inheritdoc/>
-    public IRegistryKey? OpenSubKeyAsWritable(string subkey)
+    public IRegistryKey? OpenSubKeyAsWritable(string subKey)
     {
         return new WindowsRegistryKey(
-            _registryKey.OpenSubKey(subkey, writable: true)!
+            _registryKey.OpenSubKey(subKey, writable: true)!
         );
     }
 

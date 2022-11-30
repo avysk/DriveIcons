@@ -3,7 +3,9 @@ namespace Fi.Pentode.Registry.Lib;
 /// <summary>
 /// Exception to throw if something is wrong with registry.
 /// </summary>
+#pragma warning disable S3925 // "ISerializable" should be implemented correctly
 public sealed class RegistryException : Exception
+#pragma warning restore S3925 // "ISerializable" should be implemented correctly
 {
     /// <inheritdoc/>
     public RegistryException() { }
@@ -33,86 +35,78 @@ public sealed class DriveIcons
     /// </summary>
     public const char MaxDisk = 'Z';
 
-    private IRegistryKey _driveIconsKey
+    private IRegistryKey DriveIconsKey()
     {
-        get
-        {
-            List<string> subkeys =
-                new()
-                {
-                    "SOFTWARE",
-                    "Microsoft",
-                    "Windows",
-                    "CurrentVersion",
-                    "Explorer",
-                    "DriveIcons"
-                };
-            IRegistryKey? lastKey = _rootKey;
-            foreach (var subkey in subkeys)
+        List<string> subkeys =
+            new()
             {
-                if (!ReferenceEquals(lastKey, _rootKey))
-                {
-                    lastKey!.Dispose();
-                }
-                IRegistryKey? nextKey = lastKey.OpenSubKey(subkey);
-                lastKey = nextKey;
-                if (nextKey == null)
-                {
-                    throw new RegistryException(
-                        $"Failed to get subkey {subkey}."
-                    );
-                }
+                "SOFTWARE",
+                "Microsoft",
+                "Windows",
+                "CurrentVersion",
+                "Explorer",
+                "DriveIcons"
+            };
+        IRegistryKey? lastKey = _rootKey;
+        foreach (var subkey in subkeys)
+        {
+            IRegistryKey? nextKey = lastKey.OpenSubKey(subkey);
+            if (!ReferenceEquals(lastKey, _rootKey))
+            {
+                lastKey.Dispose();
             }
 
-            return lastKey;
+            lastKey = nextKey;
+            if (lastKey == null)
+            {
+                throw new RegistryException($"Failed to get subkey {subkey}.");
+            }
         }
+
+        return lastKey;
     }
 
-    private IRegistryKey _driveIconsKeyWritable
+    private IRegistryKey DriveIconsKeyWritable()
     {
-        get
-        {
-            List<string> subkeys =
-                new()
-                {
-                    "SOFTWARE",
-                    "Microsoft",
-                    "Windows",
-                    "CurrentVersion",
-                    "Explorer",
-                    "DriveIcons"
-                };
-            IRegistryKey? lastKey = _rootKey;
-            foreach (var subkey in subkeys)
+        List<string> subkeys =
+            new()
             {
-                if (!ReferenceEquals(lastKey, _rootKey))
-                {
-                    lastKey!.Dispose();
-                }
-                IRegistryKey? nextKey = lastKey.OpenSubKeyAsWritable(subkey);
-                lastKey = nextKey;
-                if (nextKey == null)
-                {
-                    throw new RegistryException(
-                        $"Failed to get subkey {subkey}."
-                    );
-                }
+                "SOFTWARE",
+                "Microsoft",
+                "Windows",
+                "CurrentVersion",
+                "Explorer",
+                "DriveIcons"
+            };
+        IRegistryKey? lastKey = _rootKey;
+        foreach (var subKey in subkeys)
+        {
+            if (!ReferenceEquals(lastKey, _rootKey))
+            {
+                lastKey!.Dispose();
             }
 
-            return lastKey;
+            IRegistryKey? nextKey = lastKey.OpenSubKeyAsWritable(subKey);
+            lastKey = nextKey;
+            if (nextKey == null)
+            {
+                throw new RegistryException($"Failed to get subkey {subKey}.");
+            }
         }
+
+        return lastKey;
     }
 
     private string? _iconPath([CheckDisk] char disk)
     {
         string letter = disk.ToString();
+        string[] subKeys = DriveIconsKey().SubKeyNames.ToArray();
 
-        if (!_driveIconsKey.SubKeyNames.Contains(letter))
+        if (!subKeys.Contains(letter))
         {
             return null;
         }
-
-        using IRegistryKey? driveIconKey = _driveIconsKey.OpenSubKey(letter);
+        using IRegistryKey? driveIconKey = DriveIconsKey().OpenSubKey(letter);
         if (driveIconKey == null)
         {
             throw new RegistryException(
@@ -162,7 +156,7 @@ public sealed class DriveIcons
     private void _writeIconPath([CheckDisk] char disk, string newPath)
     {
         string letter = disk.ToString();
-        using IRegistryKey driveIconsKey = _driveIconsKeyWritable;
+        using IRegistryKey driveIconsKey = DriveIconsKeyWritable();
         using IRegistryKey driveIconKey = driveIconsKey.CreateSubKey(letter);
         const string defaultIcon = "DefaultIcon";
         using IRegistryKey finalKey = driveIconKey.CreateSubKey(defaultIcon);
@@ -173,14 +167,14 @@ public sealed class DriveIcons
     {
         string letter = disk.ToString();
 
-        if (!_driveIconsKey.SubKeyNames.Contains(letter))
+        if (!DriveIconsKey().SubKeyNames.Contains(letter))
         {
             // If key for drive does not exist, we do nothing.
             // Otherwise, we will check that it is well-formed and delete it.
             return;
         }
 
-        using IRegistryKey driveIconKey = _driveIconsKey.OpenSubKey(letter)!;
+        using IRegistryKey driveIconKey = DriveIconsKey().OpenSubKey(letter)!;
         if (driveIconKey == null)
         {
             throw new RegistryException(
@@ -215,11 +209,12 @@ public sealed class DriveIcons
         }
 
         IEnumerable<string> names = finalKey.ValueNames;
-        int length = names.Count();
-        if ((length != 1) || (!names.Contains(string.Empty)))
+        var enumerable = names as string[] ?? names.ToArray();
+        int length = enumerable.Length;
+        if ((length != 1) || (!enumerable.Contains(string.Empty)))
         {
             throw new RegistryException(
-                $"Default icon subkey for disk {letter} "
+                $"Default icon subKey for disk {letter} "
                     + "looks very strange."
             );
         }
@@ -235,7 +230,7 @@ public sealed class DriveIcons
             );
         }
 
-        _driveIconsKey.DeleteSubKeyTree(letter);
+        DriveIconsKey().DeleteSubKeyTree(letter);
     }
 
     /// <summary>

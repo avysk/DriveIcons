@@ -1,5 +1,4 @@
-using Fi.Pentode.MockedRegistry;
-
+using Fi.Pentode.Mocked.Registry;
 using Ninject;
 
 namespace Fi.Pentode.Registry.Lib.Test;
@@ -87,6 +86,6 @@ public class DriveIconsReadonlyTests
     {
         var exception = Assert.Throws<RegistryException>(action);
         Assert.IsType<RegistryException>(exception);
-        Assert.Equal("Cannot open non-existent subkey.", exception.Message);
+        Assert.Equal("Cannot open non-existent subKey.", exception.Message);
     }
 }
