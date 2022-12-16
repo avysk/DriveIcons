@@ -1,4 +1,4 @@
-namespace DriveIconsApp;
+namespace Fi.Pentode.DriveIcons.App;
 
 public partial class Form1 : Form
 {

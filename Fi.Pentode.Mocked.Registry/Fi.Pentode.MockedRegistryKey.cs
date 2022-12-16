@@ -24,7 +24,10 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// values are arrays of full names of subKeys and full names of "registry
     /// values".
     /// </returns>
-    public static Dictionary<string, string[]> GetKeys() => _keys;
+    public static Dictionary<string, string[]> GetKeys()
+    {
+        return _keys;
+    }
 
     private static Dictionary<string, object> _values = new();
 
@@ -35,7 +38,10 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// Dictionary keys are "full names of registry values", dictionary values
     /// are their values.
     /// </returns>
-    public static Dictionary<string, object> GetValues() => _values;
+    public static Dictionary<string, object> GetValues()
+    {
+        return _values;
+    }
 
     /// <summary>
     /// In-memory "registry" for testing.
@@ -72,7 +78,12 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </value>
     public IEnumerable<string> ValueNames
     {
-        get { return _keys[_path].Where(value => _values.ContainsKey(value)); }
+        get
+        {
+            return _keys[_path].Where(
+                static value => _values.ContainsKey(value)
+            );
+        }
     }
 
     /// <summary>
@@ -83,7 +94,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </value>
     public IEnumerable<string> SubKeyNames
     {
-        get { return _keys[_path].Where(key => _keys.ContainsKey(key)); }
+        get { return _keys[_path].Where(static key => _keys.ContainsKey(key)); }
     }
 
     /// <summary>
@@ -120,12 +131,7 @@ public sealed class MockedRegistryKey : IRegistryKey
             _keys.Add(newPath, Array.Empty<string>());
         }
 
-        return new MockedRegistryKey(
-            path: newPath,
-            keys: _keys,
-            values: _values,
-            writable: true
-        );
+        return new MockedRegistryKey(newPath, _keys, _values, true);
     }
 
     /// <summary>
@@ -150,20 +156,23 @@ public sealed class MockedRegistryKey : IRegistryKey
         }
 
         string treeRoot = $"{_path}\\{subKey}";
-        foreach (
-            var key in from k in _keys.Keys
-            where k.StartsWith(treeRoot)
-            select k
-        )
+
+        var badKeys = (
+            from key in _keys.Keys.Where(
+                k => k.StartsWith(treeRoot, StringComparison.Ordinal)
+            )
+            let wasInDictionary = _keys.Remove(key)
+            where !wasInDictionary
+            select key
+        ).ToArray();
+
+        if (badKeys.Any())
         {
-            bool wasInDictionary = _keys.Remove(key);
-            if (!wasInDictionary)
-            {
-                throw new RegistryException(
-                    $"Key {key} was supposed be in "
-                        + "the registry but it was not."
-                );
-            }
+            var badKey = badKeys[0];
+            throw new RegistryException(
+                $"Key {badKey} was supposed be in "
+                    + "the registry but it was not."
+            );
         }
     }
 
@@ -242,11 +251,7 @@ public sealed class MockedRegistryKey : IRegistryKey
             throw new RegistryException("Cannot open non-existent subKey.");
         }
 
-        return new MockedRegistryKey(
-            path: newPath,
-            keys: _keys,
-            values: _values
-        );
+        return new MockedRegistryKey(newPath, _keys, _values);
     }
 
     /// <summary>
@@ -272,12 +277,7 @@ public sealed class MockedRegistryKey : IRegistryKey
             throw new RegistryException("Cannot open non-existent subKey.");
         }
 
-        return new MockedRegistryKey(
-            path: newPath,
-            keys: _keys,
-            values: _values,
-            writable: true
-        );
+        return new MockedRegistryKey(newPath, _keys, _values, true);
     }
 
     /// <summary>

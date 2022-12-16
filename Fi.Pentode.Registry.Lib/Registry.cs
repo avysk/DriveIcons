@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 namespace Fi.Pentode.Registry.Lib;
 
 /// <summary>
@@ -21,6 +23,7 @@ public sealed class RegistryException : Exception
 /// <summary>
 /// The class to set disks' icons.
 /// </summary>
+[PublicAPI]
 public sealed class DriveIcons
 {
     private readonly IRegistryKey _rootKey;
@@ -37,7 +40,7 @@ public sealed class DriveIcons
 
     private IRegistryKey DriveIconsKey()
     {
-        List<string> subkeys =
+        List<string> subKeys =
             new()
             {
                 "SOFTWARE",
@@ -47,28 +50,28 @@ public sealed class DriveIcons
                 "Explorer",
                 "DriveIcons"
             };
-        IRegistryKey? lastKey = _rootKey;
-        foreach (var subkey in subkeys)
+        IRegistryKey lastKey = _rootKey;
+        foreach (var subKey in subKeys)
         {
-            IRegistryKey? nextKey = lastKey.OpenSubKey(subkey);
+            var nextKey = lastKey.OpenSubKey(subKey);
             if (!ReferenceEquals(lastKey, _rootKey))
             {
                 lastKey.Dispose();
             }
 
-            lastKey = nextKey;
-            if (lastKey == null)
-            {
-                throw new RegistryException($"Failed to get subkey {subkey}.");
-            }
+            lastKey =
+                nextKey
+                ?? throw new RegistryException(
+                    $"Failed to get subKey {subKey}."
+                );
         }
 
         return lastKey;
     }
 
-    private IRegistryKey DriveIconsKeyWritable()
+    private IRegistryKey _driveIconsKeyWritable()
     {
-        List<string> subkeys =
+        List<string> subKeys =
             new()
             {
                 "SOFTWARE",
@@ -79,7 +82,7 @@ public sealed class DriveIcons
                 "DriveIcons"
             };
         IRegistryKey? lastKey = _rootKey;
-        foreach (var subKey in subkeys)
+        foreach (var subKey in subKeys)
         {
             if (!ReferenceEquals(lastKey, _rootKey))
             {
@@ -90,11 +93,11 @@ public sealed class DriveIcons
             lastKey = nextKey;
             if (nextKey == null)
             {
-                throw new RegistryException($"Failed to get subkey {subKey}.");
+                throw new RegistryException($"Failed to get subKey {subKey}.");
             }
         }
 
-        return lastKey;
+        return lastKey!;
     }
 
     private string? _iconPath([CheckDisk] char disk)
@@ -106,6 +109,7 @@ public sealed class DriveIcons
         {
             return null;
         }
+
         using IRegistryKey? driveIconKey = DriveIconsKey().OpenSubKey(letter);
         if (driveIconKey == null)
         {
@@ -120,7 +124,7 @@ public sealed class DriveIcons
         {
             throw new RegistryException(
                 $"Key for disk {letter} does exist but does not have "
-                    + $"{defaultIcon} subkey."
+                    + $"{defaultIcon} subKey."
             );
         }
 
@@ -128,7 +132,7 @@ public sealed class DriveIcons
         if (finalKey == null)
         {
             throw new RegistryException(
-                $"Default icon subkey for disk {letter} both does "
+                $"Default icon subKey for disk {letter} both does "
                     + "and does not exist."
             );
         }
@@ -156,7 +160,7 @@ public sealed class DriveIcons
     private void _writeIconPath([CheckDisk] char disk, string newPath)
     {
         string letter = disk.ToString();
-        using IRegistryKey driveIconsKey = DriveIconsKeyWritable();
+        using IRegistryKey driveIconsKey = _driveIconsKeyWritable();
         using IRegistryKey driveIconKey = driveIconsKey.CreateSubKey(letter);
         const string defaultIcon = "DefaultIcon";
         using IRegistryKey finalKey = driveIconKey.CreateSubKey(defaultIcon);
@@ -187,7 +191,7 @@ public sealed class DriveIcons
         {
             throw new RegistryException(
                 $"Key for disk {letter} does exist but does not have "
-                    + $"{defaultIcon} subkey."
+                    + $"{defaultIcon} subKey."
             );
         }
 
@@ -195,7 +199,7 @@ public sealed class DriveIcons
         if (finalKey == null)
         {
             throw new RegistryException(
-                $"Default icon subkey for disk {letter} both does "
+                $"Default icon subKey for disk {letter} both does "
                     + "and does not exist."
             );
         }
@@ -203,7 +207,7 @@ public sealed class DriveIcons
         if (finalKey.SubKeyNames.Any())
         {
             throw new RegistryException(
-                $"Default icon subkey for disk {letter} "
+                $"Default icon subKey for disk {letter} "
                     + "looks very strange."
             );
         }
@@ -225,7 +229,7 @@ public sealed class DriveIcons
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
             throw new RegistryException(
-                $"Default icon subkey for disk {letter} "
+                $"Default icon subKey for disk {letter} "
                     + "looks very strange."
             );
         }
@@ -259,7 +263,7 @@ public sealed class DriveIcons
     /// The character, representing the disk.
     /// </param>
     /// <returns>
-    /// The peth (inside quotes) to the custom disk icon or
+    /// The path (inside quotes) to the custom disk icon or
     /// <strong>null</strong>.
     /// </returns>
     /// <exception cref="RegistryException">
@@ -267,7 +271,7 @@ public sealed class DriveIcons
     /// </exception>
     public string? this[char disk]
     {
-        get { return _iconPath(disk); }
+        get => _iconPath(disk);
         set
         {
             if (value != null)

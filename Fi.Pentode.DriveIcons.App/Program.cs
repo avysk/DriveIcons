@@ -1,4 +1,4 @@
-namespace DriveIconsApp;
+namespace Fi.Pentode.DriveIcons.App;
 
 public static class Program
 {

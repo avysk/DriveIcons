@@ -1,11 +1,11 @@
 using Fi.Pentode.Mocked.Registry;
 using Ninject;
 
-namespace Fi.Pentode.Registry.Lib.Test;
+namespace Fi.Pentode.Registry.Lib.Tests;
 
-public class DriveIconsReadonlyTests
+public sealed class DriveIconsReadonlyTests
 {
-    private const string _localMachine = "LocalMachine";
+    private const string _LOCAL_MACHINE = "LocalMachine";
     private static readonly DriveIcons _driveIcons;
 
     private static readonly List<char> _wrongDisks =
@@ -14,35 +14,35 @@ public class DriveIconsReadonlyTests
     private static readonly List<Action<char>> _accessors =
         new()
         {
-            (char disk) =>
+            disk =>
             {
                 // read icon path for the disk
-                _ = _driveIcons![disk];
-                return;
+                _ = _driveIcons[disk];
             },
-            (char disk) =>
+            static disk =>
             {
                 // write icon path for the disk
-                _driveIcons![disk] = "foo";
-                return;
+                _driveIcons[disk] = "foo";
             },
-            (char disk) =>
+            static disk =>
             {
                 // delete icon path for the disk
-                _driveIcons![disk] = null;
-                return;
+                _driveIcons[disk] = null;
             }
         };
 
-    public readonly static IEnumerable<object[]> _wrongDiskTestData =
+    public static readonly IEnumerable<object[]> WrongDiskTestData =
         from disk in _wrongDisks
         from action in _accessors
         select new object[] { disk, () => action(disk) };
-    public readonly static IEnumerable<object[]> _accessorTestData =
+
+    public static readonly IEnumerable<object[]> AccessorTestData =
         from action in _accessors
         select new object[] { () => action('T') };
 
+#pragma warning disable S3963 // "static" fields should be initialized inline
     static DriveIconsReadonlyTests()
+#pragma warning restore S4963 // "static" fields should be initialized inline
     {
         IKernel kernel = new StandardKernel();
         kernel
@@ -53,7 +53,7 @@ public class DriveIconsReadonlyTests
                 "keys",
                 new Dictionary<string, string[]>
                 {
-                    { _localMachine, Array.Empty<string>() }
+                    { _LOCAL_MACHINE, Array.Empty<string>() }
                 }
             )
             .WithConstructorArgument(
@@ -67,7 +67,7 @@ public class DriveIconsReadonlyTests
     }
 
     [Theory]
-    [MemberData(nameof(_wrongDiskTestData))]
+    [MemberData(nameof(WrongDiskTestData))]
     public void DriveIcons_DiskCharIsNotInRange_AccessorsThrow(
         char disk,
         Action action
@@ -79,7 +79,7 @@ public class DriveIconsReadonlyTests
     }
 
     [Theory]
-    [MemberData(nameof(_accessorTestData))]
+    [MemberData(nameof(AccessorTestData))]
     public void DriveIcons_NoRegistryKeyForTheDiskChar_AccessorsThrow(
         Action action
     )

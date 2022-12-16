@@ -1,4 +1,4 @@
-﻿namespace Fi.Pentode.Registry.Lib.Test;
+﻿namespace Fi.Pentode.Registry.Lib.Tests;
 
 public class RegistryExceptionTests
 {

@@ -3,7 +3,7 @@
 namespace Fi.Pentode.Registry.Lib;
 
 /// <summary>
-/// The wrapper class, presenting Windows registry keys vio <see
+/// The wrapper class, presenting Windows registry keys via <see
 /// cref="IRegistryKey"/> interface.
 /// </summary>
 public sealed class WindowsRegistryKey : IRegistryKey
@@ -46,11 +46,11 @@ public sealed class WindowsRegistryKey : IRegistryKey
     public IEnumerable<string> ValueNames => _registryKey.GetValueNames();
 
     /// <inheritdoc/>
-    public IRegistryKey? OpenSubKey(string subKey) =>
+    public IRegistryKey OpenSubKey(string subKey) =>
         new WindowsRegistryKey(_registryKey.OpenSubKey(subKey)!);
 
     /// <inheritdoc/>
-    public IRegistryKey? OpenSubKeyAsWritable(string subKey)
+    public IRegistryKey OpenSubKeyAsWritable(string subKey)
     {
         return new WindowsRegistryKey(
             _registryKey.OpenSubKey(subKey, writable: true)!
@@ -69,7 +69,5 @@ public sealed class WindowsRegistryKey : IRegistryKey
             _registryKey.Dispose();
             _disposedValue = true;
         }
-
-        GC.SuppressFinalize(this);
     }
 }

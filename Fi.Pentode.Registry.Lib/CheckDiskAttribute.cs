@@ -6,7 +6,7 @@ internal class CheckDiskAttribute : ContractAspect
 {
     public override void Validate(dynamic? value)
     {
-        char disk = (char)value;
+        char disk = (char)value!;
         char minDisk = DriveIcons.MinDisk;
         char maxDisk = DriveIcons.MaxDisk;
         if ((disk < minDisk) || (disk > maxDisk))
