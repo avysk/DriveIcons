@@ -1,10 +1,10 @@
-using Fi.Pentode.Registry.Lib;
-
 namespace Fi.Pentode.Mocked.Registry.Tests;
+
+using Fi.Pentode.Registry.Lib;
 
 public class EmptyMockedReadonlyRegistryTests
 {
-    private readonly MockedRegistryKey _emptyLocalMachine;
+    private readonly MockedRegistryKey emptyLocalMachine;
 
     public EmptyMockedReadonlyRegistryTests()
     {
@@ -14,7 +14,7 @@ public class EmptyMockedReadonlyRegistryTests
             { localMachine, Array.Empty<string>() }
         };
         Dictionary<string, object> emptyValues = new();
-        _emptyLocalMachine = new MockedRegistryKey(
+        this.emptyLocalMachine = new MockedRegistryKey(
             path: localMachine,
             keys: emptyKeys,
             values: emptyValues
@@ -24,8 +24,8 @@ public class EmptyMockedReadonlyRegistryTests
     [Fact]
     public void MockedRegistry_FreshRegistry_MustBeEmpty()
     {
-        Assert.Empty(_emptyLocalMachine.SubKeyNames);
-        Assert.Empty(_emptyLocalMachine.ValueNames);
+        Assert.Empty(this.emptyLocalMachine.SubKeyNames);
+        Assert.Empty(this.emptyLocalMachine.ValueNames);
 
         // keys and values dictionaries are static
         Assert.Single(MockedRegistryKey.GetKeys());
@@ -36,7 +36,7 @@ public class EmptyMockedReadonlyRegistryTests
     public void MockedRegistry_ReadonlyKey_ThrowsOnSubkeyCreation()
     {
         RegistryException exception = Assert.Throws<RegistryException>(
-            () => _emptyLocalMachine.CreateSubKey("foo")
+            () => this.emptyLocalMachine.CreateSubKey("foo")
         );
         Assert.IsType<RegistryException>(exception);
         Assert.Equal(

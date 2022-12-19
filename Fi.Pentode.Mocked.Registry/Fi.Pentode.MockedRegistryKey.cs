@@ -1,49 +1,25 @@
-﻿using Fi.Pentode.Registry.Lib;
-using Microsoft.Win32;
+﻿namespace Fi.Pentode.Mocked.Registry;
 
-namespace Fi.Pentode.Mocked.Registry;
+using Fi.Pentode.Registry.Lib;
+using Microsoft.Win32;
 
 /// <summary>
 /// In-memory "registry" for testing.
 /// </summary>
 public sealed class MockedRegistryKey : IRegistryKey
 {
-    private bool _disposedValue;
+    private static Dictionary<string, string[]> keys = new();
 
-    private readonly string _path;
+    private static Dictionary<string, object> values = new();
 
-    private readonly bool _writable;
+    private readonly string path;
 
-    private static Dictionary<string, string[]> _keys = new();
+    private readonly bool writable;
 
-    /// <summary>
-    /// Get the dictionary of defined "registry keys".
-    /// </summary>
-    /// <returns>
-    /// Dictionary keys are "full names of registry keys" without trailing \,
-    /// values are arrays of full names of subKeys and full names of "registry
-    /// values".
-    /// </returns>
-    public static Dictionary<string, string[]> GetKeys()
-    {
-        return _keys;
-    }
-
-    private static Dictionary<string, object> _values = new();
+    private bool disposedValue;
 
     /// <summary>
-    /// Get dictionary of defined "registry values".
-    /// </summary>
-    /// <returns>
-    /// Dictionary keys are "full names of registry values", dictionary values
-    /// are their values.
-    /// </returns>
-    public static Dictionary<string, object> GetValues()
-    {
-        return _values;
-    }
-
-    /// <summary>
+    /// Initializes a new instance of the <see cref="MockedRegistryKey"/> class.
     /// In-memory "registry" for testing.
     /// </summary>
     /// <param name="path">Path of selected key.</param>
@@ -60,18 +36,39 @@ public sealed class MockedRegistryKey : IRegistryKey
         bool writable = false
     )
     {
-        _path = path;
-#pragma warning disable S3010 // Static fields should not be updated in constructors
-        _keys = keys;
-#pragma warning restore S3010 // Static fields should not be updated in constructors
-#pragma warning disable S3010 // Static fields should not be updated in constructors
-        _values = values;
-#pragma warning restore S3010 // Static fields should not be updated in constructors
-        _writable = writable;
+        this.path = path;
+        MockedRegistryKey.keys = keys;
+        MockedRegistryKey.values = values;
+        this.writable = writable;
     }
 
     /// <summary>
-    /// Allows to get values of this key.
+    /// Get the dictionary of defined "registry keys".
+    /// </summary>
+    /// <returns>
+    /// Dictionary keys are "full names of registry keys" without trailing \,
+    /// values are arrays of full names of subKeys and full names of "registry
+    /// values".
+    /// </returns>
+    public static Dictionary<string, string[]> GetKeys()
+    {
+        return keys;
+    }
+
+    /// <summary>
+    /// Get dictionary of defined "registry values".
+    /// </summary>
+    /// <returns>
+    /// Dictionary keys are "full names of registry values", dictionary values
+    /// are their values.
+    /// </returns>
+    public static Dictionary<string, object> GetValues()
+    {
+        return values;
+    }
+
+    /// <summary>
+    /// Gets values in this key.
     /// </summary>
     /// <value>
     /// The names of the values in the key.
@@ -80,21 +77,24 @@ public sealed class MockedRegistryKey : IRegistryKey
     {
         get
         {
-            return _keys[_path].Where(
-                static value => _values.ContainsKey(value)
+            return keys[this.path].Where(
+                static value => values.ContainsKey(value)
             );
         }
     }
 
     /// <summary>
-    /// Allows to get subKeys of this key.
+    /// Gets the names of subKeys of this key.
     /// </summary>
     /// <value>
     /// The names of the subKeys in the key.
     /// </value>
     public IEnumerable<string> SubKeyNames
     {
-        get { return _keys[_path].Where(static key => _keys.ContainsKey(key)); }
+        get
+        {
+            return keys[this.path].Where(static key => keys.ContainsKey(key));
+        }
     }
 
     /// <summary>
@@ -116,22 +116,22 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public IRegistryKey CreateSubKey(string subKey)
     {
-        if (!_writable)
+        if (!this.writable)
         {
             throw new RegistryException(
                 "Cannot create subKeys in a readonly key."
             );
         }
 
-        string newPath = $"{_path}\\{subKey}";
+        string newPath = $"{this.path}\\{subKey}";
 
-        if (!_keys.ContainsKey(newPath))
+        if (!keys.ContainsKey(newPath))
         {
             // create new empty key
-            _keys.Add(newPath, Array.Empty<string>());
+            keys.Add(newPath, Array.Empty<string>());
         }
 
-        return new MockedRegistryKey(newPath, _keys, _values, true);
+        return new MockedRegistryKey(newPath, keys, values, true);
     }
 
     /// <summary>
@@ -148,20 +148,20 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public void DeleteSubKeyTree(string subKey)
     {
-        if (!_writable)
+        if (!this.writable)
         {
             throw new RegistryException(
                 "Cannot delete subtree in a readonly key."
             );
         }
 
-        string treeRoot = $"{_path}\\{subKey}";
+        string treeRoot = $"{this.path}\\{subKey}";
 
         var badKeys = (
-            from key in _keys.Keys.Where(
+            from key in keys.Keys.Where(
                 k => k.StartsWith(treeRoot, StringComparison.Ordinal)
             )
-            let wasInDictionary = _keys.Remove(key)
+            let wasInDictionary = keys.Remove(key)
             where !wasInDictionary
             select key
         ).ToArray();
@@ -192,12 +192,12 @@ public sealed class MockedRegistryKey : IRegistryKey
     public object? GetValue(string valueName, object? defaultValue)
     {
         const string newPath = "{_path}\\{name}";
-        if (!_values.ContainsKey(newPath))
+        if (!values.ContainsKey(newPath))
         {
             return defaultValue;
         }
 
-        return _values[newPath];
+        return values[newPath];
     }
 
     /// <summary>
@@ -213,7 +213,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </returns>
     public RegistryValueKind GetValueKind(string valueName)
     {
-        object? value = GetValue(valueName, null);
+        object? value = this.GetValue(valueName, null);
         if (value is string)
         {
             return RegistryValueKind.String;
@@ -245,13 +245,13 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public IRegistryKey OpenSubKey(string subKey)
     {
-        string newPath = $"{_path}\\{subKey}";
-        if (!_keys.ContainsKey(newPath))
+        string newPath = $"{this.path}\\{subKey}";
+        if (!keys.ContainsKey(newPath))
         {
             throw new RegistryException("Cannot open non-existent subKey.");
         }
 
-        return new MockedRegistryKey(newPath, _keys, _values);
+        return new MockedRegistryKey(newPath, keys, values);
     }
 
     /// <summary>
@@ -271,13 +271,13 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public IRegistryKey OpenSubKeyAsWritable(string subKey)
     {
-        string newPath = $"{_path}\\{subKey}";
-        if (!_keys.ContainsKey(newPath))
+        string newPath = $"{this.path}\\{subKey}";
+        if (!keys.ContainsKey(newPath))
         {
             throw new RegistryException("Cannot open non-existent subKey.");
         }
 
-        return new MockedRegistryKey(newPath, _keys, _values, true);
+        return new MockedRegistryKey(newPath, keys, values, true);
     }
 
     /// <summary>
@@ -291,16 +291,16 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </param>
     public void SetValue(string valueName, object value)
     {
-        string valuePath = $"{_path}\\{valueName}";
-        _values[valuePath] = value;
+        string valuePath = $"{this.path}\\{valueName}";
+        values[valuePath] = value;
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (!_disposedValue)
+        if (!this.disposedValue)
         {
-            _disposedValue = true;
+            this.disposedValue = true;
         }
     }
 }

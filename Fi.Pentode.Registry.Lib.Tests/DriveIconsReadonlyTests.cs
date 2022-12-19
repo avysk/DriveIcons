@@ -1,43 +1,44 @@
+namespace Fi.Pentode.Registry.Lib.Tests;
+
 using Fi.Pentode.Mocked.Registry;
 using Ninject;
 
-namespace Fi.Pentode.Registry.Lib.Tests;
-
 public sealed class DriveIconsReadonlyTests
 {
-    private const string _LOCAL_MACHINE = "LocalMachine";
-    private static readonly DriveIcons _driveIcons;
+    private const string LOCALMACHINE = "LocalMachine";
 
-    private static readonly List<char> _wrongDisks =
+    private static readonly DriveIcons driveIcons;
+
+    private static readonly List<char> wrongDisks =
         new() { (char)('A' - 1), (char)('Z' + 1) };
 
-    private static readonly List<Action<char>> _accessors =
+    private static readonly List<Action<char>> accessors =
         new()
         {
             disk =>
             {
                 // read icon path for the disk
-                _ = _driveIcons[disk];
+                _ = driveIcons![disk];
             },
             static disk =>
             {
                 // write icon path for the disk
-                _driveIcons[disk] = "foo";
+                driveIcons![disk] = "foo";
             },
             static disk =>
             {
                 // delete icon path for the disk
-                _driveIcons[disk] = null;
+                driveIcons![disk] = null;
             }
         };
 
     public static readonly IEnumerable<object[]> WrongDiskTestData =
-        from disk in _wrongDisks
-        from action in _accessors
+        from disk in wrongDisks
+        from action in accessors
         select new object[] { disk, () => action(disk) };
 
     public static readonly IEnumerable<object[]> AccessorTestData =
-        from action in _accessors
+        from action in accessors
         select new object[] { () => action('T') };
 
 #pragma warning disable S3963 // "static" fields should be initialized inline
@@ -51,9 +52,9 @@ public sealed class DriveIconsReadonlyTests
             .WithConstructorArgument("path", "localMachine")
             .WithConstructorArgument(
                 "keys",
-                new Dictionary<string, string[]>
+                new Dictionary<string, string[]>()
                 {
-                    { _LOCAL_MACHINE, Array.Empty<string>() }
+                    { LOCALMACHINE, Array.Empty<string>() }
                 }
             )
             .WithConstructorArgument(
@@ -63,7 +64,7 @@ public sealed class DriveIconsReadonlyTests
 
         // Now we have a static instance of DriveIcons, using MockedRegistry.
         // The tests here are readonly so it can be static.
-        _driveIcons = kernel.Get<DriveIcons>();
+        driveIcons = kernel.Get<DriveIcons>();
     }
 
     [Theory]

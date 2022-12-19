@@ -18,7 +18,7 @@ public interface IRegistryKey : IDisposable
     /// If the subKey does not exist, an empty subKey is created first.
     /// </remarks>
     /// <param name="subKey">
-    /// The name of the subKey,
+    /// The name of the subKey.
     /// </param>
     /// <returns>
     /// The subKey opened.

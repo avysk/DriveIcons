@@ -50,7 +50,7 @@ public sealed class DriveIcons
                 "Explorer",
                 "DriveIcons"
             };
-        IRegistryKey lastKey = _rootKey;
+        var lastKey = _rootKey;
         foreach (var subKey in subKeys)
         {
             var nextKey = lastKey.OpenSubKey(subKey);
@@ -69,7 +69,7 @@ public sealed class DriveIcons
         return lastKey;
     }
 
-    private IRegistryKey _driveIconsKeyWritable()
+    private IRegistryKey DriveIconsKeyWritable()
     {
         List<string> subKeys =
             new()
@@ -81,7 +81,7 @@ public sealed class DriveIcons
                 "Explorer",
                 "DriveIcons"
             };
-        IRegistryKey? lastKey = _rootKey;
+        var lastKey = _rootKey;
         foreach (var subKey in subKeys)
         {
             if (!ReferenceEquals(lastKey, _rootKey))
@@ -89,7 +89,7 @@ public sealed class DriveIcons
                 lastKey!.Dispose();
             }
 
-            IRegistryKey? nextKey = lastKey.OpenSubKeyAsWritable(subKey);
+            var nextKey = lastKey.OpenSubKeyAsWritable(subKey);
             lastKey = nextKey;
             if (nextKey == null)
             {
@@ -100,17 +100,17 @@ public sealed class DriveIcons
         return lastKey!;
     }
 
-    private string? _iconPath([CheckDisk] char disk)
+    private string? IconPath([CheckDisk] char disk)
     {
-        string letter = disk.ToString();
-        string[] subKeys = DriveIconsKey().SubKeyNames.ToArray();
+        var letter = disk.ToString();
+        var subKeys = DriveIconsKey().SubKeyNames.ToArray();
 
         if (!subKeys.Contains(letter))
         {
             return null;
         }
 
-        using IRegistryKey? driveIconKey = DriveIconsKey().OpenSubKey(letter);
+        using var driveIconKey = DriveIconsKey().OpenSubKey(letter);
         if (driveIconKey == null)
         {
             throw new RegistryException(
@@ -128,7 +128,7 @@ public sealed class DriveIcons
             );
         }
 
-        using IRegistryKey? finalKey = driveIconKey.OpenSubKey(defaultIcon);
+        using var finalKey = driveIconKey.OpenSubKey(defaultIcon);
         if (finalKey == null)
         {
             throw new RegistryException(
@@ -137,15 +137,13 @@ public sealed class DriveIcons
             );
         }
 
-        object? value = finalKey.GetValue(string.Empty, null);
+        var value = finalKey.GetValue(string.Empty, null);
         if (value == null)
         {
             return null;
         }
 
-        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(
-            string.Empty
-        );
+        var kind = finalKey.GetValueKind(string.Empty);
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
             throw new RegistryException(
@@ -157,19 +155,19 @@ public sealed class DriveIcons
         return (string)value;
     }
 
-    private void _writeIconPath([CheckDisk] char disk, string newPath)
+    private void WriteIconPath([CheckDisk] char disk, string newPath)
     {
-        string letter = disk.ToString();
-        using IRegistryKey driveIconsKey = _driveIconsKeyWritable();
-        using IRegistryKey driveIconKey = driveIconsKey.CreateSubKey(letter);
+        var letter = disk.ToString();
+        using var driveIconsKey = DriveIconsKeyWritable();
+        using var driveIconKey = driveIconsKey.CreateSubKey(letter);
         const string defaultIcon = "DefaultIcon";
-        using IRegistryKey finalKey = driveIconKey.CreateSubKey(defaultIcon);
+        using var finalKey = driveIconKey.CreateSubKey(defaultIcon);
         finalKey.SetValue(string.Empty, newPath);
     }
 
-    private void _deleteIconPath([CheckDisk] char disk)
+    private void DeleteIconPath([CheckDisk] char disk)
     {
-        string letter = disk.ToString();
+        var letter = disk.ToString();
 
         if (!DriveIconsKey().SubKeyNames.Contains(letter))
         {
@@ -178,7 +176,7 @@ public sealed class DriveIcons
             return;
         }
 
-        using IRegistryKey driveIconKey = DriveIconsKey().OpenSubKey(letter)!;
+        using var driveIconKey = DriveIconsKey().OpenSubKey(letter)!;
         if (driveIconKey == null)
         {
             throw new RegistryException(
@@ -195,7 +193,7 @@ public sealed class DriveIcons
             );
         }
 
-        using IRegistryKey? finalKey = driveIconKey.OpenSubKey(defaultIcon);
+        using var finalKey = driveIconKey.OpenSubKey(defaultIcon);
         if (finalKey == null)
         {
             throw new RegistryException(
@@ -212,9 +210,9 @@ public sealed class DriveIcons
             );
         }
 
-        IEnumerable<string> names = finalKey.ValueNames;
+        var names = finalKey.ValueNames;
         var enumerable = names as string[] ?? names.ToArray();
-        int length = enumerable.Length;
+        var length = enumerable.Length;
         if ((length != 1) || (!enumerable.Contains(string.Empty)))
         {
             throw new RegistryException(
@@ -223,9 +221,7 @@ public sealed class DriveIcons
             );
         }
 
-        Microsoft.Win32.RegistryValueKind kind = finalKey.GetValueKind(
-            string.Empty
-        );
+        var kind = finalKey.GetValueKind(string.Empty);
         if (kind != Microsoft.Win32.RegistryValueKind.String)
         {
             throw new RegistryException(
@@ -234,12 +230,12 @@ public sealed class DriveIcons
             );
         }
 
-        DriveIconsKey().DeleteSubKeyTree(letter);
+        this.DriveIconsKey().DeleteSubKeyTree(letter);
     }
 
     /// <summary>
-    /// Create the instance of <see cref="DriveIcons"/> given the
-    /// root registry key.
+    /// Initializes a new instance of the <see cref="DriveIcons"/> class given
+    /// the root registry key.
     /// </summary>
     /// <remarks>
     /// The root key is never disposed.
@@ -249,7 +245,7 @@ public sealed class DriveIcons
     /// </param>
     public DriveIcons(IRegistryKey registry)
     {
-        _rootKey = registry;
+        this._rootKey = registry;
     }
 
     /// <summary>
@@ -271,16 +267,16 @@ public sealed class DriveIcons
     /// </exception>
     public string? this[char disk]
     {
-        get => _iconPath(disk);
+        get => this.IconPath(disk);
         set
         {
             if (value != null)
             {
-                _writeIconPath(disk, value);
+                this.WriteIconPath(disk, value);
             }
             else
             {
-                _deleteIconPath(disk);
+                this.DeleteIconPath(disk);
             }
         }
     }
