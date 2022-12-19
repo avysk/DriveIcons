@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <CodeAnalysisRuleSet>ruleset.xml</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
