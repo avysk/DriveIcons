@@ -1,6 +1,9 @@
 <RuleSet Name="My rules" ToolsVersion="10.0">
     <Rules AnalyzerId="StyleCop.Analyzers"
            RuleNamespace="StyleCop.Analyzers">
+        <!-- csharpier takes care about paronthoses -->
+        <Rule Id="SA1009" Action="None"/>
+        <Rule Id="SA1111" Action="None"/>
         <!-- file header is not needed -->
         <Rule Id="SA1633" Action="None"/>
     </Rules>

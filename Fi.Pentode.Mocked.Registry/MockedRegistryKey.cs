@@ -43,31 +43,6 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
-    /// Get the dictionary of defined "registry keys".
-    /// </summary>
-    /// <returns>
-    /// Dictionary keys are "full names of registry keys" without trailing \,
-    /// values are arrays of full names of subKeys and full names of "registry
-    /// values".
-    /// </returns>
-    public static Dictionary<string, string[]> GetKeys()
-    {
-        return keys;
-    }
-
-    /// <summary>
-    /// Get dictionary of defined "registry values".
-    /// </summary>
-    /// <returns>
-    /// Dictionary keys are "full names of registry values", dictionary values
-    /// are their values.
-    /// </returns>
-    public static Dictionary<string, object> GetValues()
-    {
-        return values;
-    }
-
-    /// <summary>
     /// Gets values in this key.
     /// </summary>
     /// <value>
@@ -98,6 +73,31 @@ public sealed class MockedRegistryKey : IRegistryKey
     }
 
     /// <summary>
+    /// Get the dictionary of defined "registry keys".
+    /// </summary>
+    /// <returns>
+    /// Dictionary keys are "full names of registry keys" without trailing \,
+    /// values are arrays of full names of subKeys and full names of "registry
+    /// values".
+    /// </returns>
+    public static Dictionary<string, string[]> GetKeys()
+    {
+        return keys;
+    }
+
+    /// <summary>
+    /// Get dictionary of defined "registry values".
+    /// </summary>
+    /// <returns>
+    /// Dictionary keys are "full names of registry values", dictionary values
+    /// are their values.
+    /// </returns>
+    public static Dictionary<string, object> GetValues()
+    {
+        return values;
+    }
+
+    /// <summary>
     /// Get the subKey of this key.
     /// </summary>
     /// <remarks>
@@ -123,7 +123,7 @@ public sealed class MockedRegistryKey : IRegistryKey
             );
         }
 
-        string newPath = $"{this.path}\\{subKey}";
+        var newPath = $"{this.path}\\{subKey}";
 
         if (!keys.ContainsKey(newPath))
         {
@@ -155,7 +155,7 @@ public sealed class MockedRegistryKey : IRegistryKey
             );
         }
 
-        string treeRoot = $"{this.path}\\{subKey}";
+        var treeRoot = $"{this.path}\\{subKey}";
 
         var badKeys = (
             from key in keys.Keys.Where(
@@ -213,7 +213,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </returns>
     public RegistryValueKind GetValueKind(string valueName)
     {
-        object? value = this.GetValue(valueName, null);
+        var value = this.GetValue(valueName, null);
         if (value is string)
         {
             return RegistryValueKind.String;
@@ -245,7 +245,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public IRegistryKey OpenSubKey(string subKey)
     {
-        string newPath = $"{this.path}\\{subKey}";
+        var newPath = $"{this.path}\\{subKey}";
         if (!keys.ContainsKey(newPath))
         {
             throw new RegistryException("Cannot open non-existent subKey.");
@@ -271,7 +271,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </exception>
     public IRegistryKey OpenSubKeyAsWritable(string subKey)
     {
-        string newPath = $"{this.path}\\{subKey}";
+        var newPath = $"{this.path}\\{subKey}";
         if (!keys.ContainsKey(newPath))
         {
             throw new RegistryException("Cannot open non-existent subKey.");
@@ -291,7 +291,7 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </param>
     public void SetValue(string valueName, object value)
     {
-        string valuePath = $"{this.path}\\{valueName}";
+        var valuePath = $"{this.path}\\{valueName}";
         values[valuePath] = value;
     }
 
