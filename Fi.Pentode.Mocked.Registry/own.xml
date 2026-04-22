@@ -1,0 +1,6 @@
+<RuleSet Name="My rules" ToolsVersion="10.0">
+    <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+        <!-- we do not want file headers. -->
+        <Rule Id="SA1633" Action="None" />
+    </Rules>
+</RuleSet>
