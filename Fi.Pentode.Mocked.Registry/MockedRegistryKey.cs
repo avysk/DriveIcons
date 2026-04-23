@@ -1,4 +1,4 @@
-﻿using Fi.Pentode.Registry.Lib;
+using Fi.Pentode.Registry.Lib;
 
 using Microsoft.Win32;
 
@@ -140,22 +140,26 @@ public sealed class MockedRegistryKey : IRegistryKey
 
         string treeRoot = $"{this.path}\\{subKey}";
 
-        string[] badKeys = (
-            from key in keys.Keys.Where(
-                k => k.StartsWith(treeRoot, StringComparison.Ordinal)
-            )
-            let wasInDictionary = keys.Remove(key)
-            where !wasInDictionary
+        string[] keysToRemove = (
+            from key in keys.Keys
+            where key.StartsWith(treeRoot, StringComparison.Ordinal)
             select key
         ).ToArray();
 
-        if (badKeys.Any())
+        foreach (var key in keysToRemove)
         {
-            string badKey = badKeys[0];
-            throw new RegistryException(
-                $"Key {badKey} was supposed be in "
-                    + "the registry but it was not."
-            );
+            keys.Remove(key);
+        }
+
+        string[] valuesToRemove = (
+            from value in values.Keys
+            where value.StartsWith(treeRoot, StringComparison.Ordinal)
+            select value
+        ).ToArray();
+
+        foreach (var value in valuesToRemove)
+        {
+            values.Remove(value);
         }
     }
 
@@ -174,8 +178,8 @@ public sealed class MockedRegistryKey : IRegistryKey
     /// </returns>
     public object? GetValue(string valueName, object? defaultValue)
     {
-        const string newPath = "{_path}\\{name}";
-        return values.ContainsKey(newPath) ? values[newPath] : defaultValue;
+        string valuePath = $"{this.path}\\{valueName}";
+        return values.ContainsKey(valuePath) ? values[valuePath] : defaultValue;
     }
 
     /// <summary>

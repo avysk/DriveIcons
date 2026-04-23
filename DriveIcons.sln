@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Lib", "Registry.Lib\Registry.Lib.csproj", "{64359B72-09A6-4EFE-96E3-C1757996F333}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fi.Pentode.Registry.Lib", "Fi.Pentode.Registry.Lib\Fi.Pentode.Registry.Lib.csproj", "{64359B72-09A6-4EFE-96E3-C1757996F333}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Registry.Lib.Tests", "Registry.Lib.Tests\Registry.Lib.Tests.csproj", "{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fi.Pentode.Registry.Lib.Tests", "Fi.Pentode.Registry.Lib.Tests\Fi.Pentode.Registry.Lib.Tests.csproj", "{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E79D3631-67C9-4415-9566-62230699A413} = {E79D3631-67C9-4415-9566-62230699A413}
 	EndProjectSection
@@ -14,37 +14,37 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DriveIcons.App", "DriveIcon
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{55DAD619-A1E1-48FA-BA97-7FBAA1E3E278}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Registry.CLI", "Registry.CLI\Registry.CLI.fsproj", "{2A00B09A-1572-41C2-87FE-DB0C0E386C80}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub automation", "GitHub automation", "{5135C65A-9051-4893-A6AA-9CBD176D62C9}"
+ProjectSection(SolutionItems) = preProject
+	.github\dependabot.yml = .github\dependabot.yml
+	.github\workflows\dotnet-desktop.yml = .github\workflows\dotnet-desktop.yml
+EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry", "Mocked.Registry\Mocked.Registry.csproj", "{E79D3631-67C9-4415-9566-62230699A413}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmus and stuff", "Roadmus and stuff", "{E6FF173C-F270-49A6-AD74-00970586693E}"
+ProjectSection(SolutionItems) = preProject
+	CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+	LICENSE.md = LICENSE.md
+	README.md = README.md
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Visual studio automation", "Visual studio automation", "{6E3CF5FE-F63D-42BA-A6E9-9388BBD6CC88}"
+ProjectSection(SolutionItems) = preProject
+	.csharpierrc.yaml = .csharpierrc.yaml
+	.editorconfig = .editorconfig
+	Directory.Build.props = Directory.Build.props
+EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fi.Pentode.Mocked.Registry", "Fi.Pentode.Mocked.Registry\Fi.Pentode.Mocked.Registry.csproj", "{E79D3631-67C9-4415-9566-62230699A413}"
 	ProjectSection(ProjectDependencies) = postProject
 		{64359B72-09A6-4EFE-96E3-C1757996F333} = {64359B72-09A6-4EFE-96E3-C1757996F333}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mocked.Registry.Tests", "Mocked.Registry.Tests\Mocked.Registry.Tests.csproj", "{86F14D9A-3856-48DF-A524-447FB5D8593D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fi.Pentode.Mocked.Registry.Tests", "Fi.Pentode.Mocked.Registry.Tests\Fi.Pentode.Mocked.Registry.Tests.csproj", "{86F14D9A-3856-48DF-A524-447FB5D8593D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E79D3631-67C9-4415-9566-62230699A413} = {E79D3631-67C9-4415-9566-62230699A413}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub automation", "GitHub automation", "{5135C65A-9051-4893-A6AA-9CBD176D62C9}"
-	ProjectSection(SolutionItems) = preProject
-		.github\dependabot.yml = .github\dependabot.yml
-		.github\workflows\dotnet-desktop.yml = .github\workflows\dotnet-desktop.yml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roadmus and stuff", "Roadmus and stuff", "{E6FF173C-F270-49A6-AD74-00970586693E}"
-	ProjectSection(SolutionItems) = preProject
-		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
-		LICENSE.md = LICENSE.md
-		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Visual studio automation", "Visual studio automation", "{6E3CF5FE-F63D-42BA-A6E9-9388BBD6CC88}"
-	ProjectSection(SolutionItems) = preProject
-		.csharpierrc.yaml = .csharpierrc.yaml
-		.editorconfig = .editorconfig
-		Directory.Build.props = Directory.Build.props
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fi.Pentode.Registry.CLI", "Fi.Pentode.Registry.CLI\Fi.Pentode.Registry.CLI.fsproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,20 +59,23 @@ Global
 		{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E57B5A8-1312-4C66-88BE-104E31B8DDE7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B2714999-2A81-4B75-9DE3-5FF05958B332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B2714999-2A81-4B75-9DE3-5FF05958B332}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2714999-2A81-4B75-9DE3-5FF05958B332}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2714999-2A81-4B75-9DE3-5FF05958B332}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A00B09A-1572-41C2-87FE-DB0C0E386C80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A00B09A-1572-41C2-87FE-DB0C0E386C80}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A00B09A-1572-41C2-87FE-DB0C0E386C80}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A00B09A-1572-41C2-87FE-DB0C0E386C80}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E79D3631-67C9-4415-9566-62230699A413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E79D3631-67C9-4415-9566-62230699A413}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E79D3631-67C9-4415-9566-62230699A413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E79D3631-67C9-4415-9566-62230699A413}.Release|Any CPU.Build.0 = Release|Any CPU
 		{86F14D9A-3856-48DF-A524-447FB5D8593D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{86F14D9A-3856-48DF-A524-447FB5D8593D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86F14D9A-3856-48DF-A524-447FB5D8593D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86F14D9A-3856-48DF-A524-447FB5D8593D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

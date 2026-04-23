@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Registry.Lib\Registry.Lib.csproj" />
+    <ProjectReference Include="..\Fi.Pentode.Registry.Lib\Fi.Pentode.Registry.Lib.csproj" />
+    <ProjectReference Include="..\Fi.Pentode.Mocked.Registry\Fi.Pentode.Mocked.Registry.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.17763.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
