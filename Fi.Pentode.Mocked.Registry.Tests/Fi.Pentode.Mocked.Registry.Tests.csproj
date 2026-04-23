@@ -24,10 +24,4 @@
     <ProjectReference Include="..\Fi.Pentode.Mocked.Registry\Fi.Pentode.Mocked.Registry.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="EmptyMockedRegistryKeyReadonlyTests.cs" />
-    <Compile Include="NonEmptyMockedRegistryKeyReadonlyTests.cs" />
-    <Compile Include="Usings.cs" />
-  </ItemGroup>
-
 </Project>
