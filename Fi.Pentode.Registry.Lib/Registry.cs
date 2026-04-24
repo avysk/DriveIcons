@@ -81,26 +81,28 @@ public sealed class DriveIcons
         var lastKey = _rootKey;
         foreach (var subKey in subKeys)
         {
+            var nextKey = lastKey.OpenSubKeyAsWritable(subKey);
             if (!ReferenceEquals(lastKey, _rootKey))
             {
-                lastKey!.Dispose();
+                lastKey.Dispose();
             }
 
-            var nextKey = lastKey.OpenSubKeyAsWritable(subKey);
-            lastKey = nextKey;
             if (nextKey == null)
             {
                 throw new RegistryException($"Failed to get subKey {subKey}.");
             }
+
+            lastKey = nextKey;
         }
 
-        return lastKey!;
+        return lastKey;
     }
 
     private string? IconPath([CheckDisk] char disk)
     {
         var letter = disk.ToString();
-        var subKeys = DriveIconsKey().SubKeyNames.ToArray();
+        using var driveIconsKey = DriveIconsKey();
+        var subKeys = driveIconsKey.SubKeyNames.ToArray();
 
         if (!subKeys.Contains(letter))
         {
@@ -108,7 +110,7 @@ public sealed class DriveIcons
         }
 
         using var driveIconKey =
-            DriveIconsKey().OpenSubKey(letter)
+            driveIconsKey.OpenSubKey(letter)
             ?? throw new RegistryException(
                 $"Key for disk {letter} both does and does not exist."
             );
@@ -159,8 +161,9 @@ public sealed class DriveIcons
     private void DeleteIconPath([CheckDisk] char disk)
     {
         var letter = disk.ToString();
+        using var driveIconsKey = DriveIconsKey();
 
-        if (!DriveIconsKey().SubKeyNames.Contains(letter))
+        if (!driveIconsKey.SubKeyNames.Contains(letter))
         {
             // If key for drive does not exist, we do nothing.
             // Otherwise, we will check that it is well-formed and delete it.
@@ -168,7 +171,7 @@ public sealed class DriveIcons
         }
 
         using var driveIconKey =
-            DriveIconsKey().OpenSubKey(letter)!
+            driveIconsKey.OpenSubKey(letter)!
             ?? throw new RegistryException(
                 $"Key for disk {letter} both does and does not exist."
             );
@@ -215,7 +218,8 @@ public sealed class DriveIcons
             );
         }
 
-        this.DriveIconsKey().DeleteSubKeyTree(letter);
+        using var writableDriveIconsKey = DriveIconsKeyWritable();
+        writableDriveIconsKey.DeleteSubKeyTree(letter);
     }
 
     /// <summary>

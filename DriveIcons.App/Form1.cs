@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 
 namespace DriveIconsApp;
@@ -10,6 +11,8 @@ public partial class Form1 : Form
     private const int DetailsTop = 12;
     private const int DetailsWidth = 292;
     private const int DetailsSpacing = 6;
+    private const int DriveGridRowHeight = 24;
+    private const int DriveGridIconPadding = 4;
     private const string NoCustomIconText = "(none)";
     private const string NoSystemIconText = "(unavailable)";
     private const string MissingDriveSystemIconText = "(drive not present)";
@@ -50,11 +53,19 @@ public partial class Form1 : Form
         dgvDrives.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Letter", Width = 50 });
         dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Type", Width = 90 });
-        dgvDrives.Columns.Add(new DataGridViewImageColumn { HeaderText = "Icon", Width = 32 });
+        dgvDrives.Columns.Add(new DataGridViewImageColumn
+        {
+            HeaderText = string.Empty,
+            Width = 32,
+            ImageLayout = DataGridViewImageCellLayout.Normal,
+            DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
+        });
         dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Custom Icon Path", Width = 300 });
         dgvDrives.Location = new Point(12, 12);
+        dgvDrives.MultiSelect = false;
         dgvDrives.Name = "dgvDrives";
         dgvDrives.ReadOnly = true;
+        dgvDrives.RowTemplate.Height = DriveGridRowHeight;
         dgvDrives.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dgvDrives.Size = new Size(472, 460);
         dgvDrives.TabIndex = 0;
@@ -161,6 +172,7 @@ public partial class Form1 : Form
         LayoutDetailsPane();
         Name = "Form1";
         Text = "DriveIcons — Custom Drive Icon Editor";
+        FormClosed += Form1_FormClosed;
         Load += Form1_Load;
         ((ISupportInitialize)dgvDrives).EndInit();
         statusStrip.ResumeLayout(false);
@@ -346,8 +358,9 @@ public partial class Form1 : Form
 
     private void PopulateDrives()
     {
+        DisposeDriveGridIcons();
         dgvDrives.Rows.Clear();
-        _iconCache.Clear();
+        DisposeIconCache();
         for (char drive = 'A'; drive <= 'Z'; drive++)
         {
             string drivePath = $"{drive}:\\";
@@ -383,7 +396,7 @@ public partial class Form1 : Form
             {
                 try
                 {
-                    Bitmap? bitmap = TryLoadDriveShellBitmap(drivePath, fileAttrs, largeIcon: false);
+                    Bitmap? bitmap = TryLoadDriveShellBitmap(drivePath, fileAttrs, largeIcon: true);
                     if (bitmap != null)
                     {
                         _iconCache[drive] = bitmap;
@@ -417,20 +430,20 @@ public partial class Form1 : Form
 
     private void ApplyDriveRowIcon(int rowIndex, char drive, string? customPath)
     {
-        Bitmap? customBitmap = TryLoadCustomIconBitmap(customPath, largeIcon: false);
-        if (customBitmap != null)
+        Bitmap? customBitmap = TryLoadCustomIconBitmap(customPath, largeIcon: true);
+        try
         {
-            dgvDrives.Rows[rowIndex].Cells[2].Value = customBitmap;
-            return;
+            Bitmap? displayBitmap = customBitmap != null
+                ? ResizeDriveGridIcon(customBitmap)
+                : _iconCache.TryGetValue(drive, out var systemBitmap)
+                    ? ResizeDriveGridIcon(systemBitmap)
+                    : null;
+            SetDriveRowIcon(rowIndex, displayBitmap);
         }
-
-        if (_iconCache.TryGetValue(drive, out var systemBitmap))
+        finally
         {
-            dgvDrives.Rows[rowIndex].Cells[2].Value = systemBitmap;
-            return;
+            customBitmap?.Dispose();
         }
-
-        dgvDrives.Rows[rowIndex].Cells[2].Value = null;
     }
 
     private void LayoutDetailsPane()
@@ -546,11 +559,73 @@ public partial class Form1 : Form
         return !string.IsNullOrWhiteSpace(iconFilePath);
     }
 
+    private Bitmap? ResizeDriveGridIcon(Image? source)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        int maxDimension = Math.Max(1, dgvDrives.RowTemplate.Height - DriveGridIconPadding);
+        float scale = Math.Min((float)maxDimension / source.Width, (float)maxDimension / source.Height);
+        int resizedWidth = Math.Max(1, (int)Math.Round(source.Width * scale));
+        int resizedHeight = Math.Max(1, (int)Math.Round(source.Height * scale));
+
+        var resizedBitmap = new Bitmap(resizedWidth, resizedHeight);
+        using var graphics = Graphics.FromImage(resizedBitmap);
+        graphics.Clear(Color.Transparent);
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        graphics.SmoothingMode = SmoothingMode.HighQuality;
+        graphics.DrawImage(source, 0, 0, resizedWidth, resizedHeight);
+        return resizedBitmap;
+    }
+
+    private void SetDriveRowIcon(int rowIndex, Bitmap? bitmap)
+    {
+        var cell = dgvDrives.Rows[rowIndex].Cells[2];
+        if (cell.Value is Image previousImage)
+        {
+            previousImage.Dispose();
+        }
+
+        cell.Value = bitmap;
+    }
+
+    private void DisposeDriveGridIcons()
+    {
+        foreach (DataGridViewRow row in dgvDrives.Rows)
+        {
+            if (row.Cells[2].Value is Image image)
+            {
+                image.Dispose();
+                row.Cells[2].Value = null;
+            }
+        }
+    }
+
+    private void DisposeIconCache()
+    {
+        foreach (Bitmap bitmap in _iconCache.Values)
+        {
+            bitmap.Dispose();
+        }
+
+        _iconCache.Clear();
+    }
+
     private void SetPreviewImage(Image? image)
     {
         var previousImage = pbPreview.Image;
         pbPreview.Image = image;
         previousImage?.Dispose();
+    }
+
+    private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
+    {
+        SetPreviewImage(null);
+        DisposeDriveGridIcons();
+        DisposeIconCache();
     }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
