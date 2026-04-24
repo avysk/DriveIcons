@@ -13,6 +13,9 @@ public partial class Form1 : Form
     private const int DetailsSpacing = 6;
     private const int DriveGridRowHeight = 24;
     private const int DriveGridIconPadding = 4;
+    private const int PreviewBoxSize = 124;
+    private const int PreviewInnerSpacing = 4;
+    private const int PreviewArrowWidth = 36;
     private const string NoCustomIconText = "(none)";
     private const string NoSystemIconText = "(unavailable)";
     private const string MissingDriveSystemIconText = "(drive not present)";
@@ -22,6 +25,8 @@ public partial class Form1 : Form
     private readonly StatusStrip statusStrip = new();
     private readonly ToolStripStatusLabel lblStatus = new();
     private readonly PictureBox pbPreview = new();
+    private readonly Label lblPreviewArrow = new();
+    private readonly PictureBox pbBrowsedPreview = new();
     private readonly Label lblSystemIcon = new();
     private readonly Label lblCustomIcon = new();
     private readonly Button btnBrowse = new();
@@ -32,6 +37,7 @@ public partial class Form1 : Form
     private string _lastBrowsePath = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
     private Fi.Pentode.Registry.Lib.DriveIcons? _driveIcons;
     private Dictionary<char, Bitmap> _iconCache = new();
+    private string? _browsedIconPath;
     private char? _selectedDrive;
 
     public Form1()
@@ -44,6 +50,7 @@ public partial class Form1 : Form
         ((ISupportInitialize)dgvDrives).BeginInit();
         statusStrip.SuspendLayout();
         ((ISupportInitialize)pbPreview).BeginInit();
+        ((ISupportInitialize)pbBrowsedPreview).BeginInit();
         SuspendLayout();
 
         // dgvDrives
@@ -88,11 +95,28 @@ public partial class Form1 : Form
         pbPreview.BorderStyle = BorderStyle.FixedSingle;
         pbPreview.Location = new Point(DetailsLeft, 60);
         pbPreview.Name = "pbPreview";
-        pbPreview.Size = new Size(128, 128);
+        pbPreview.Size = new Size(PreviewBoxSize, PreviewBoxSize);
         pbPreview.SizeMode = PictureBoxSizeMode.Zoom;
         pbPreview.TabIndex = 2;
         pbPreview.TabStop = false;
         pbPreview.BackColor = Color.White;
+
+        // lblPreviewArrow
+        lblPreviewArrow.Location = new Point(0, 0);
+        lblPreviewArrow.Name = "lblPreviewArrow";
+        lblPreviewArrow.Size = new Size(PreviewArrowWidth, PreviewBoxSize);
+        lblPreviewArrow.TabIndex = 9;
+        lblPreviewArrow.Paint += lblPreviewArrow_Paint;
+
+        // pbBrowsedPreview
+        pbBrowsedPreview.BorderStyle = BorderStyle.FixedSingle;
+        pbBrowsedPreview.Location = new Point(0, 0);
+        pbBrowsedPreview.Name = "pbBrowsedPreview";
+        pbBrowsedPreview.Size = new Size(PreviewBoxSize, PreviewBoxSize);
+        pbBrowsedPreview.SizeMode = PictureBoxSizeMode.Zoom;
+        pbBrowsedPreview.TabIndex = 10;
+        pbBrowsedPreview.TabStop = false;
+        pbBrowsedPreview.BackColor = Color.White;
 
         // lblSystemIcon
         lblSystemIcon.AutoEllipsis = true;
@@ -163,11 +187,14 @@ public partial class Form1 : Form
         Controls.Add(btnBrowse);
         Controls.Add(lblCustomIcon);
         Controls.Add(lblSystemIcon);
+        Controls.Add(pbBrowsedPreview);
+        Controls.Add(lblPreviewArrow);
         Controls.Add(pbPreview);
         Controls.Add(statusStrip);
         Controls.Add(dgvDrives);
         lblCustomIcon.BringToFront();
         lblSystemIcon.BringToFront();
+        pbBrowsedPreview.SendToBack();
         pbPreview.SendToBack();
         LayoutDetailsPane();
         Name = "Form1";
@@ -177,6 +204,7 @@ public partial class Form1 : Form
         ((ISupportInitialize)dgvDrives).EndInit();
         statusStrip.ResumeLayout(false);
         statusStrip.PerformLayout();
+        ((ISupportInitialize)pbBrowsedPreview).EndInit();
         ((ISupportInitialize)pbPreview).EndInit();
         ResumeLayout(false);
         PerformLayout();
@@ -190,6 +218,12 @@ public partial class Form1 : Form
             string letterStr = row.Cells[0].Value?.ToString() ?? "";
             if (char.TryParse(letterStr, out char drive))
             {
+                if (_selectedDrive != drive)
+                {
+                    _browsedIconPath = null;
+                    SetBrowsedPreviewImage(null);
+                }
+
                 _selectedDrive = drive;
                 UpdatePreview(drive);
             }
@@ -271,7 +305,8 @@ public partial class Form1 : Form
         {
             string filePath = openFileDialog.FileName;
             _lastBrowsePath = Path.GetDirectoryName(filePath) ?? _lastBrowsePath;
-            lblCustomIcon.Text = $"Custom: {filePath}";
+            _browsedIconPath = filePath;
+            SetBrowsedPreviewImage(TryLoadCustomIconBitmap(filePath, largeIcon: true));
             lblStatus.Text = $"Selected: {filePath}. Click 'Set Icon' to apply.";
         }
     }
@@ -279,15 +314,14 @@ public partial class Form1 : Form
     private void btnSet_Click(object? sender, EventArgs e)
     {
         if (_selectedDrive == null) { lblStatus.Text = "Please select a drive first."; return; }
-        string customText = lblCustomIcon.Text.Replace("Custom: ", "");
-        if (string.IsNullOrEmpty(customText) || customText == NoCustomIconText)
+        if (string.IsNullOrEmpty(_browsedIconPath))
         { lblStatus.Text = "No icon file selected."; return; }
-        if (!TryResolveIconFilePath(customText, out string iconFilePath) || !File.Exists(iconFilePath))
-        { lblStatus.Text = $"File not found: {customText}"; return; }
+        if (!TryResolveIconFilePath(_browsedIconPath, out string iconFilePath) || !File.Exists(iconFilePath))
+        { lblStatus.Text = $"File not found: {_browsedIconPath}"; return; }
         try
         {
             if (_driveIcons == null) { lblStatus.Text = "Application not initialized."; return; }
-            _driveIcons[_selectedDrive.Value] = customText;
+            _driveIcons[_selectedDrive.Value] = _browsedIconPath;
             RefreshRow(_selectedDrive.Value);
             lblStatus.Text = $"Icon set for drive {_selectedDrive.Value}.";
         }
@@ -457,6 +491,8 @@ public partial class Form1 : Form
             labelHeight
         );
         pbPreview.Location = new Point(DetailsLeft, lblCustomIcon.Bottom + DetailsSpacing);
+        lblPreviewArrow.Location = new Point(pbPreview.Right + PreviewInnerSpacing, pbPreview.Top);
+        pbBrowsedPreview.Location = new Point(lblPreviewArrow.Right + PreviewInnerSpacing, pbPreview.Top);
         btnBrowse.Location = new Point(DetailsLeft, pbPreview.Bottom + 12);
         btnSet.Location = new Point(DetailsLeft, btnBrowse.Bottom + DetailsSpacing);
         btnReset.Location = new Point(DetailsLeft, btnSet.Bottom + DetailsSpacing);
@@ -616,14 +652,53 @@ public partial class Form1 : Form
 
     private void SetPreviewImage(Image? image)
     {
-        var previousImage = pbPreview.Image;
-        pbPreview.Image = image;
+        SetPictureBoxImage(pbPreview, image);
+    }
+
+    private void SetBrowsedPreviewImage(Image? image)
+    {
+        SetPictureBoxImage(pbBrowsedPreview, image);
+    }
+
+    private static void SetPictureBoxImage(PictureBox pictureBox, Image? image)
+    {
+        var previousImage = pictureBox.Image;
+        pictureBox.Image = image;
         previousImage?.Dispose();
+    }
+
+    private static void lblPreviewArrow_Paint(object? sender, PaintEventArgs e)
+    {
+        Rectangle bounds = sender is Control control ? control.ClientRectangle : e.ClipRectangle;
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        e.Graphics.Clear(((Control?)sender)?.BackColor ?? SystemColors.Control);
+
+        int centerX = bounds.Width / 2;
+        int centerY = bounds.Height / 2;
+        int halfArrowWidth = 12;
+        int halfArrowHeight = 10;
+        int halfShaftHeight = 3;
+        int tailLength = 10;
+
+        Point[] arrowPoints =
+        {
+            new(centerX - halfArrowWidth, centerY),
+            new(centerX - 2, centerY - halfArrowHeight),
+            new(centerX - 2, centerY - halfShaftHeight),
+            new(centerX + tailLength, centerY - halfShaftHeight),
+            new(centerX + tailLength, centerY + halfShaftHeight),
+            new(centerX - 2, centerY + halfShaftHeight),
+            new(centerX - 2, centerY + halfArrowHeight)
+        };
+
+        using var brush = new SolidBrush(Color.Black);
+        e.Graphics.FillPolygon(brush, arrowPoints);
     }
 
     private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
     {
         SetPreviewImage(null);
+        SetBrowsedPreviewImage(null);
         DisposeDriveGridIcons();
         DisposeIconCache();
     }
