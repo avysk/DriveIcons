@@ -1,0 +1,64 @@
+name: Release DriveIcons.App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Read app version
+      shell: pwsh
+      run: |
+        [xml]$project = Get-Content 'DriveIcons.App\DriveIcons.App.csproj'
+        $version = $project.Project.PropertyGroup.Version
+        if ([string]::IsNullOrWhiteSpace($version)) {
+          throw 'DriveIcons.App version was not found.'
+        }
+
+        "APP_VERSION=$version" >> $env:GITHUB_ENV
+        "APP_ARTIFACT_NAME=driveicons-$version.exe" >> $env:GITHUB_ENV
+
+    - name: Restore
+      run: dotnet restore DriveIcons.sln
+
+    - name: Build release
+      run: dotnet build DriveIcons.sln --configuration Release --no-restore
+
+    - name: Test release
+      run: dotnet test DriveIcons.sln --configuration Release --no-build --verbosity minimal
+
+    - name: Publish release app
+      run: >
+        dotnet publish DriveIcons.App\DriveIcons.App.csproj
+        --configuration Release
+        --runtime win-x64
+        --self-contained true
+        /p:PublishSingleFile=true
+        /p:PublishTrimmed=false
+        /p:IncludeNativeLibrariesForSelfExtract=true
+        /p:DebugType=None
+        /p:DebugSymbols=false
+        --output publish\driveicons
+
+    - name: Prepare artifact
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+        Copy-Item 'publish\driveicons\DriveIcons.App.exe' "artifacts\$env:APP_ARTIFACT_NAME"
+
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_ARTIFACT_NAME }}
+        path: artifacts\${{ env.APP_ARTIFACT_NAME }}
+        if-no-files-found: error

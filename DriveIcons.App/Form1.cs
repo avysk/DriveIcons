@@ -7,17 +7,19 @@ namespace DriveIconsApp;
 
 public partial class Form1 : Form
 {
-    private const int FormClientWidth = 1132;
-    private const int DriveGridWidth = 804;
-    private const int DetailsLeft = 828;
+    private const int FormClientWidth = 2016;
+    private const int DriveGridWidth = 1104;
+    private const int DetailsLeft = 1128;
     private const int DetailsTop = 12;
-    private const int DetailsWidth = 292;
+    private const int DetailsWidth = 876;
     private const int DetailsSpacing = 6;
     private const int DriveGridRowHeight = 24;
     private const int DriveGridIconPadding = 4;
     private const int PreviewBoxSize = 124;
     private const int PreviewInnerSpacing = 4;
     private const int PreviewArrowWidth = 36;
+    private const int PreviewArrowAnimationIntervalMs = 40;
+    private const int PreviewArrowAnimationSteps = 18;
     private const string NoCustomIconText = "(none)";
     private const string NoSelectedIconText = "(not chosen)";
     private const string NoSystemIconText = "(unavailable)";
@@ -38,11 +40,13 @@ public partial class Form1 : Form
     private readonly Button btnReset = new();
     private readonly Button btnRestartExplorer = new();
     private readonly OpenFileDialog openFileDialog = new();
+    private readonly System.Windows.Forms.Timer previewArrowTimer = new();
     private string _lastBrowsePath = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
     private Fi.Pentode.Registry.Lib.DriveIcons? _driveIcons;
     private Dictionary<char, Bitmap> _iconCache = new();
     private string? _browsedIconPath;
     private char? _selectedDrive;
+    private int _previewArrowAnimationStep;
 
     public Form1()
     {
@@ -72,7 +76,7 @@ public partial class Form1 : Form
             ImageLayout = DataGridViewImageCellLayout.Normal,
             DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
         });
-        dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Custom Icon Path", Width = 600 });
+        dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Custom Icon Path", Width = 900 });
         dgvDrives.Location = new Point(12, 12);
         dgvDrives.MultiSelect = false;
         dgvDrives.Name = "dgvDrives";
@@ -87,7 +91,7 @@ public partial class Form1 : Form
         statusStrip.Items.Add(lblStatus);
         statusStrip.Location = new Point(0, 525);
         statusStrip.Name = "statusStrip";
-        statusStrip.Size = new Size(800, 22);
+        statusStrip.Size = new Size(FormClientWidth, 22);
         statusStrip.TabIndex = 1;
         statusStrip.Text = "statusStrip1";
 
@@ -193,6 +197,11 @@ public partial class Form1 : Form
         // openFileDialog
         openFileDialog.Filter = "Icon Files (*.ico)|*.ico|All Files (*.*)|*.*";
         openFileDialog.Title = "Select Icon File";
+
+        // previewArrowTimer
+        previewArrowTimer.Interval = PreviewArrowAnimationIntervalMs;
+        previewArrowTimer.Tick += previewArrowTimer_Tick;
+        previewArrowTimer.Start();
 
         // Form1
         AutoScaleMode = AutoScaleMode.Font;
@@ -703,7 +712,7 @@ public partial class Form1 : Form
         previousImage?.Dispose();
     }
 
-    private static void lblPreviewArrow_Paint(object? sender, PaintEventArgs e)
+    private void lblPreviewArrow_Paint(object? sender, PaintEventArgs e)
     {
         Rectangle bounds = sender is Control control ? control.ClientRectangle : e.ClipRectangle;
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -727,12 +736,40 @@ public partial class Form1 : Form
             new(centerX - 2, centerY + halfArrowHeight)
         };
 
-        using var brush = new SolidBrush(Color.Black);
-        e.Graphics.FillPolygon(brush, arrowPoints);
+        using var arrowPath = new GraphicsPath();
+        arrowPath.AddPolygon(arrowPoints);
+
+        using var baseBrush = new SolidBrush(Color.FromArgb(64, 64, 64));
+        using var borderPen = new Pen(Color.Black, 1.25f);
+        e.Graphics.FillPath(baseBrush, arrowPath);
+        e.Graphics.DrawPath(borderPen, arrowPath);
+
+        float progress = (float)_previewArrowAnimationStep / PreviewArrowAnimationSteps;
+        int highlightTravel = bounds.Width + 52;
+        int highlightX = bounds.Right + 16 - (int)Math.Round(progress * highlightTravel);
+        Rectangle highlightRect = new(highlightX, 0, 36, bounds.Height);
+
+        GraphicsState graphicsState = e.Graphics.Save();
+        e.Graphics.SetClip(arrowPath);
+        using var highlightBrush = new LinearGradientBrush(
+            highlightRect,
+            Color.FromArgb(0, 80, 160, 255),
+            Color.FromArgb(210, 80, 160, 255),
+            LinearGradientMode.Horizontal);
+        e.Graphics.FillRectangle(highlightBrush, highlightRect);
+        e.Graphics.Restore(graphicsState);
+    }
+
+    private void previewArrowTimer_Tick(object? sender, EventArgs e)
+    {
+        _previewArrowAnimationStep = (_previewArrowAnimationStep + 1) % PreviewArrowAnimationSteps;
+        lblPreviewArrow.Invalidate();
     }
 
     private void Form1_FormClosed(object? sender, FormClosedEventArgs e)
     {
+        previewArrowTimer.Stop();
+        previewArrowTimer.Dispose();
         SetPreviewImage(null);
         SetBrowsedPreviewImage(null);
         DisposeDriveGridIcons();
