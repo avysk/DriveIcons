@@ -1,4 +1,4 @@
-﻿namespace DriveIconsApp;
+namespace DriveIconsApp;
 
 partial class Form1
 {
@@ -13,26 +13,15 @@ partial class Form1
     /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
     protected override void Dispose(bool disposing)
     {
-        if (disposing && (components != null))
+        if (disposing && components != null)
         {
             components.Dispose();
         }
+        foreach (var bitmap in _iconCache.Values)
+        {
+            bitmap.Dispose();
+        }
+        _iconCache.Clear();
         base.Dispose(disposing);
     }
-
-    #region Windows Form Designer generated code
-
-    /// <summary>
-    ///  Required method for Designer support - do not modify
-    ///  the contents of this method with the code editor.
-    /// </summary>
-    private void InitializeComponent()
-    {
-        this.components = new System.ComponentModel.Container();
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        this.ClientSize = new System.Drawing.Size(800, 450);
-        this.Text = "Form1";
-    }
-
-    #endregion
 }
