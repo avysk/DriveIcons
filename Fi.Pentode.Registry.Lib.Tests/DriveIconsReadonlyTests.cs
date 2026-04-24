@@ -45,8 +45,8 @@ public sealed class DriveIconsReadonlyTests
     static DriveIconsReadonlyTests()
 #pragma warning restore S4963 // "static" fields should be initialized inline
     {
-        IKernel kernel = new StandardKernel();
-        kernel
+        IKernelConfiguration kernelConfiguration = new KernelConfiguration();
+        kernelConfiguration
             .Bind<IRegistryKey>()
             .To<MockedRegistryKey>()
             .WithConstructorArgument("path", "localMachine")
@@ -64,6 +64,7 @@ public sealed class DriveIconsReadonlyTests
 
         // Now we have a static instance of DriveIcons, using MockedRegistry.
         // The tests here are readonly so it can be static.
+        IReadOnlyKernel kernel = kernelConfiguration.BuildReadonlyKernel();
         driveIcons = kernel.Get<DriveIcons>();
     }
 

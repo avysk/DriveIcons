@@ -7,7 +7,9 @@ namespace DriveIconsApp;
 
 public partial class Form1 : Form
 {
-    private const int DetailsLeft = 496;
+    private const int FormClientWidth = 1132;
+    private const int DriveGridWidth = 804;
+    private const int DetailsLeft = 828;
     private const int DetailsTop = 12;
     private const int DetailsWidth = 292;
     private const int DetailsSpacing = 6;
@@ -17,6 +19,7 @@ public partial class Form1 : Form
     private const int PreviewInnerSpacing = 4;
     private const int PreviewArrowWidth = 36;
     private const string NoCustomIconText = "(none)";
+    private const string NoSelectedIconText = "(not chosen)";
     private const string NoSystemIconText = "(unavailable)";
     private const string MissingDriveSystemIconText = "(drive not present)";
     private const uint InvalidFileAttributes = 0xFFFFFFFF;
@@ -29,6 +32,7 @@ public partial class Form1 : Form
     private readonly PictureBox pbBrowsedPreview = new();
     private readonly Label lblSystemIcon = new();
     private readonly Label lblCustomIcon = new();
+    private readonly Label lblSelectedIcon = new();
     private readonly Button btnBrowse = new();
     private readonly Button btnSet = new();
     private readonly Button btnReset = new();
@@ -58,6 +62,7 @@ public partial class Form1 : Form
         dgvDrives.AllowUserToDeleteRows = false;
         dgvDrives.AllowUserToResizeRows = false;
         dgvDrives.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        dgvDrives.RowHeadersVisible = false;
         dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Letter", Width = 50 });
         dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Type", Width = 90 });
         dgvDrives.Columns.Add(new DataGridViewImageColumn
@@ -67,14 +72,14 @@ public partial class Form1 : Form
             ImageLayout = DataGridViewImageCellLayout.Normal,
             DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
         });
-        dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Custom Icon Path", Width = 300 });
+        dgvDrives.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Custom Icon Path", Width = 600 });
         dgvDrives.Location = new Point(12, 12);
         dgvDrives.MultiSelect = false;
         dgvDrives.Name = "dgvDrives";
         dgvDrives.ReadOnly = true;
         dgvDrives.RowTemplate.Height = DriveGridRowHeight;
         dgvDrives.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvDrives.Size = new Size(472, 460);
+        dgvDrives.Size = new Size(DriveGridWidth, 460);
         dgvDrives.TabIndex = 0;
         dgvDrives.SelectionChanged += dgvDrives_SelectionChanged;
 
@@ -138,11 +143,21 @@ public partial class Form1 : Form
         lblCustomIcon.Text = $"Custom: {NoCustomIconText}";
         lblCustomIcon.TextAlign = ContentAlignment.MiddleLeft;
 
+        // lblSelectedIcon
+        lblSelectedIcon.AutoEllipsis = true;
+        lblSelectedIcon.AutoSize = false;
+        lblSelectedIcon.Location = new Point(DetailsLeft, 48);
+        lblSelectedIcon.Name = "lblSelectedIcon";
+        lblSelectedIcon.Size = new Size(DetailsWidth, 15);
+        lblSelectedIcon.TabIndex = 5;
+        lblSelectedIcon.Text = $"Selected: {NoSelectedIconText}";
+        lblSelectedIcon.TextAlign = ContentAlignment.MiddleLeft;
+
         // btnBrowse
         btnBrowse.Location = new Point(DetailsLeft, 190);
         btnBrowse.Name = "btnBrowse";
         btnBrowse.Size = new Size(120, 30);
-        btnBrowse.TabIndex = 5;
+        btnBrowse.TabIndex = 6;
         btnBrowse.Text = "Browse...";
         btnBrowse.UseVisualStyleBackColor = true;
         btnBrowse.Click += btnBrowse_Click;
@@ -151,16 +166,17 @@ public partial class Form1 : Form
         btnSet.Location = new Point(DetailsLeft, 226);
         btnSet.Name = "btnSet";
         btnSet.Size = new Size(120, 30);
-        btnSet.TabIndex = 6;
+        btnSet.TabIndex = 7;
         btnSet.Text = "Set Icon";
         btnSet.UseVisualStyleBackColor = true;
+        btnSet.Enabled = false;
         btnSet.Click += btnSet_Click;
 
         // btnReset
         btnReset.Location = new Point(DetailsLeft, 262);
         btnReset.Name = "btnReset";
         btnReset.Size = new Size(120, 30);
-        btnReset.TabIndex = 7;
+        btnReset.TabIndex = 8;
         btnReset.Text = "Reset Icon";
         btnReset.UseVisualStyleBackColor = true;
         btnReset.Click += btnReset_Click;
@@ -169,7 +185,7 @@ public partial class Form1 : Form
         btnRestartExplorer.Location = new Point(DetailsLeft, 298);
         btnRestartExplorer.Name = "btnRestartExplorer";
         btnRestartExplorer.Size = new Size(180, 30);
-        btnRestartExplorer.TabIndex = 8;
+        btnRestartExplorer.TabIndex = 9;
         btnRestartExplorer.Text = "Restart Explorer";
         btnRestartExplorer.UseVisualStyleBackColor = true;
         btnRestartExplorer.Click += btnRestartExplorer_Click;
@@ -180,11 +196,12 @@ public partial class Form1 : Form
 
         // Form1
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(800, 547);
+        ClientSize = new Size(FormClientWidth, 547);
         Controls.Add(btnRestartExplorer);
         Controls.Add(btnReset);
         Controls.Add(btnSet);
         Controls.Add(btnBrowse);
+        Controls.Add(lblSelectedIcon);
         Controls.Add(lblCustomIcon);
         Controls.Add(lblSystemIcon);
         Controls.Add(pbBrowsedPreview);
@@ -193,10 +210,13 @@ public partial class Form1 : Form
         Controls.Add(statusStrip);
         Controls.Add(dgvDrives);
         lblCustomIcon.BringToFront();
+        lblSelectedIcon.BringToFront();
         lblSystemIcon.BringToFront();
         pbBrowsedPreview.SendToBack();
         pbPreview.SendToBack();
         LayoutDetailsPane();
+        FormBorderStyle = FormBorderStyle.FixedSingle;
+        MaximizeBox = false;
         Name = "Form1";
         Text = "DriveIcons — Custom Drive Icon Editor";
         FormClosed += Form1_FormClosed;
@@ -220,8 +240,7 @@ public partial class Form1 : Form
             {
                 if (_selectedDrive != drive)
                 {
-                    _browsedIconPath = null;
-                    SetBrowsedPreviewImage(null);
+                    ClearBrowsedSelection();
                 }
 
                 _selectedDrive = drive;
@@ -237,6 +256,7 @@ public partial class Form1 : Form
         SetPreviewImage(null);
         lblSystemIcon.Text = $"System: {NoSystemIconText}";
         lblCustomIcon.Text = $"Custom: {NoCustomIconText}";
+        lblSelectedIcon.Text = $"Selected: {(_browsedIconPath ?? NoSelectedIconText)}";
 
         // Check if drive exists using Win32 API
         uint fileAttrs = GetFileAttributes(drivePath);
@@ -307,7 +327,9 @@ public partial class Form1 : Form
             _lastBrowsePath = Path.GetDirectoryName(filePath) ?? _lastBrowsePath;
             _browsedIconPath = filePath;
             SetBrowsedPreviewImage(TryLoadCustomIconBitmap(filePath, largeIcon: true));
-            lblStatus.Text = $"Selected: {filePath}. Click 'Set Icon' to apply.";
+            lblSelectedIcon.Text = $"Selected: {filePath}";
+            btnSet.Enabled = true;
+            lblStatus.Text = "Path selected. Click 'Set Icon' to apply.";
         }
     }
 
@@ -490,13 +512,27 @@ public partial class Form1 : Form
             DetailsWidth,
             labelHeight
         );
-        pbPreview.Location = new Point(DetailsLeft, lblCustomIcon.Bottom + DetailsSpacing);
+        lblSelectedIcon.SetBounds(
+            DetailsLeft,
+            lblCustomIcon.Bottom + DetailsSpacing,
+            DetailsWidth,
+            labelHeight
+        );
+        pbPreview.Location = new Point(DetailsLeft, lblSelectedIcon.Bottom + DetailsSpacing);
         lblPreviewArrow.Location = new Point(pbPreview.Right + PreviewInnerSpacing, pbPreview.Top);
         pbBrowsedPreview.Location = new Point(lblPreviewArrow.Right + PreviewInnerSpacing, pbPreview.Top);
         btnBrowse.Location = new Point(DetailsLeft, pbPreview.Bottom + 12);
         btnSet.Location = new Point(DetailsLeft, btnBrowse.Bottom + DetailsSpacing);
         btnReset.Location = new Point(DetailsLeft, btnSet.Bottom + DetailsSpacing);
         btnRestartExplorer.Location = new Point(DetailsLeft, btnReset.Bottom + DetailsSpacing);
+    }
+
+    private void ClearBrowsedSelection()
+    {
+        _browsedIconPath = null;
+        SetBrowsedPreviewImage(null);
+        lblSelectedIcon.Text = $"Selected: {NoSelectedIconText}";
+        btnSet.Enabled = false;
     }
 
     private static Bitmap? TryLoadDriveShellBitmap(string drivePath, uint fileAttrs, bool largeIcon)
