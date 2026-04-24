@@ -1,4 +1,4 @@
-name: Release DriveIcons.App
+name: Release DriveIcons
 
 on:
   workflow_dispatch:
